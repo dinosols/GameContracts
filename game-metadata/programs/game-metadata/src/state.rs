@@ -12,9 +12,6 @@ use {
 pub const PREFIX: &str = "gamemeta";
 
 pub const MAX_STATS_SIZE: usize = 
-    4 + //pub experience: u32,
-    2 + //pub level: u16,
-
     2 + //pub health: u16,
     2 + //pub attack: u16,
     2 + //pub defense: u16,
@@ -33,13 +30,16 @@ pub const MAX_MOVE_SIZE: usize =
 pub const MAX_GAME_METADATA_LEN: usize = 
     32 +                        //pub update_authority: Pubkey,
     32 +                        //pub player_authority: Pubkey,
+    32 +                        //pub battle_authority: Pubkey,
+    4 +                         //pub experience: u32,
+    2 +                         //pub level: u16,
     MAX_STATS_SIZE +            //pub baseStats: Stats,
+    MAX_STATS_SIZE +            //pub levelStats: Stats,
     MAX_STATS_SIZE +            //pub currStats: Stats,
     MAX_MOVE_SIZE + // * MAX_MOVES + //pub moves: Array<Move>,
     MAX_MOVE_SIZE +
     MAX_MOVE_SIZE + 
-    MAX_MOVE_SIZE +
-    0; //padding
+    MAX_MOVE_SIZE;
 
 
 #[repr(C)]
@@ -77,9 +77,6 @@ pub enum MoveID {
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub struct Stats {
-    pub experience: u32,
-    pub level: u16,
-
     pub health: u16,
     pub attack: u16,
     pub defense: u16,
@@ -105,7 +102,11 @@ impl Default for Move {
 pub struct GameMetadata {
     pub update_authority: Pubkey,
     pub player_authority: Pubkey,
+    pub battle_authority: Pubkey,
+    pub experience: u32,
+    pub level: u16,
     pub base_stats: Stats,
+    pub level_stats: Stats,
     pub curr_stats: Stats,
     pub move0: Move,
     pub move1: Move,

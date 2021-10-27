@@ -96,9 +96,14 @@ describe('game-metadata', () => {
         const metadataAccount = await getMetadataPDA(mint.publicKey, program.programId);
 
         const baseStats = new Stats({
-            experience: 0,
-            level: 1,
+            health: 2,
+            attack: 3,
+            defense: 4,
+            speed: 5,
+            agility: 6,
+        });
 
+        const levelStats = new Stats({
             health: 2,
             attack: 3,
             defense: 4,
@@ -107,9 +112,6 @@ describe('game-metadata', () => {
         });
 
         const currStats = new Stats({
-            experience: 0,
-            level: 1,
-
             health: 2,
             attack: 3,
             defense: 4,
@@ -118,10 +120,10 @@ describe('game-metadata', () => {
         });
 
         const move0 = new Move({
-            move_id: 0,
+            move_id: 2,
             damage_modifier: 1,
             status_effect_chance: 2,
-            status_effect: 0,
+            status_effect: 2,
         });
         const move1 = new Move({
             move_id: 1,
@@ -139,12 +141,15 @@ describe('game-metadata', () => {
             move_id: 3,
             damage_modifier: 4,
             status_effect_chance: 5,
-            status_effect: 0,
+            status_effect: 1,
         });
 
         const gameMetadataArgs =
             new CreateGameMetadataArgs({
+                experience: 4294967295,
+                level: 65535,
                 baseStats: baseStats,
+                levelStats: levelStats,
                 currStats: currStats,
                 move0: move0,
                 move1: move1,
@@ -199,22 +204,19 @@ describe('game-metadata', () => {
         await provider.connection.getParsedConfirmedTransaction(res.txid, 'confirmed');
         log.info('NFT created', res.txid);
 
-        //console.log(metadataAccount.toString());
         const metadataAccountInfo = await provider.connection.getAccountInfo(metadataAccount);
-        //console.log(metadataAccountInfo.toString());
         const metadata = decodeMetadata(metadataAccountInfo.data);
+        console.log(metadata);
+
         assert.ok(metadata.updateAuthority === provider.wallet.publicKey.toString());
         assert.ok(metadata.playerAuthority === provider.wallet.publicKey.toString());
-        //console.log(metadata.baseStats);
-        //console.log(baseStats);
         assert.ok(Object.entries(metadata.baseStats).toString() === Object.entries(baseStats).toString());
+        assert.ok(Object.entries(metadata.levelStats).toString() === Object.entries(levelStats).toString());
         assert.ok(Object.entries(metadata.currStats).toString() === Object.entries(currStats).toString());
         assert.ok(Object.entries(metadata.move0).toString() === Object.entries(move0).toString());
         assert.ok(Object.entries(metadata.move1).toString() === Object.entries(move1).toString());
         assert.ok(Object.entries(metadata.move2).toString() === Object.entries(move2).toString());
         assert.ok(Object.entries(metadata.move3).toString() === Object.entries(move3).toString());
-
-        console.log(metadata);
     });
 
     it('Update Game Metadata', async () => {

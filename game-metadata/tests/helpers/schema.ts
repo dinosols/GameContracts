@@ -10,9 +10,6 @@ type StringPublicKey = string;
 import BN from 'bn.js';
 
 export class Stats {
-  experience: number;
-  level: number;
-
   health: number;
   attack: number;
   defense: number;
@@ -20,18 +17,12 @@ export class Stats {
   agility: number;
 
   constructor(args: {
-    experience: number;
-    level: number;
-
     health: number;
     attack: number;
     defense: number;
     speed: number;
     agility: number;
   }) {
-    this.experience = args.experience;
-    this.level = args.level;
-
     this.health = args.health;
     this.attack = args.attack;
     this.defense = args.defense;
@@ -61,7 +52,10 @@ export class Move {
 
 export class CreateGameMetadataArgs {
   instruction: number = 0;
+  experience: number;
+  level: number;
   baseStats: Stats;
+  levelStats: Stats;
   currStats: Stats;
   //moves: Array<Move>;
   move0: Move;
@@ -69,8 +63,11 @@ export class CreateGameMetadataArgs {
   move2: Move;
   move3: Move;
 
-  constructor(args: { baseStats: Stats; currStats: Stats; move0: Move; move1: Move; move2: Move; move3: Move; }) {
+  constructor(args: { experience: number; level: number; baseStats: Stats; levelStats: Stats; currStats: Stats; move0: Move; move1: Move; move2: Move; move3: Move; }) {
+    this.experience = args.experience;
+    this.level = args.level;
     this.baseStats = args.baseStats;
+    this.levelStats = args.levelStats;
     this.currStats = args.currStats;
   //   //this.moves = [...args.moves];
     this.move0 = args.move0;
@@ -87,7 +84,10 @@ export const GAME_METADATA_SCHEMA = new Map<any, any>([
       kind: 'struct',
       fields: [
         ['instruction', 'u8'],
+        ['experience', 'u32'],
+        ['level', 'u16'],
         ['baseStats', Stats],
+        ['levelStats', Stats],
         ['currStats', Stats],
         ['move0', Move],
         ['move1', Move],
@@ -101,8 +101,6 @@ export const GAME_METADATA_SCHEMA = new Map<any, any>([
     {
       kind: 'struct',
       fields: [
-        ['experience', 'u32'],
-        ['level', 'u16'],
         ['health', 'u16'],
         ['attack', 'u16'],
         ['defense', 'u16'],
@@ -126,8 +124,6 @@ export const GAME_METADATA_SCHEMA = new Map<any, any>([
 ]);
 
 const STATS_LAYOUT = struct([
-  u32('experience'),
-  u16('level'),
   u16('health'),
   u16('attack'),
   u16('defense'),
@@ -152,8 +148,13 @@ const MOVE_LAYOUT = struct([
 const METADATA_LAYOUT = struct([
   publicKey('updateAuthority'),
   publicKey('playerAuthority'),
+  publicKey('battleAuthority'),
+  u32('experience'),
+  u16('level'),
   STATS_LAYOUT.replicate('baseStats'),
+  STATS_LAYOUT.replicate('levelStats'),
   STATS_LAYOUT.replicate('currStats'),
+  //u16('padding'),
   MOVE_LAYOUT.replicate('move0'),
   MOVE_LAYOUT.replicate('move1'),
   MOVE_LAYOUT.replicate('move2'),
@@ -163,7 +164,11 @@ const METADATA_LAYOUT = struct([
 export interface Metadata {
   updateAuthority: PublicKey;
   playerAuthority: PublicKey;
+  battleAuthority: PublicKey;
+  experience: number;
+  level: number;
   baseStats: Stats;
+  levelStats: Stats;
   currStats: Stats;
   move0: Move;
   move1: Move;
@@ -178,5 +183,6 @@ export function decodeMetadata(buffer: Buffer): Metadata {
   const metadata: any = METADATA_LAYOUT.decode(buffer);
   metadata.updateAuthority = metadata.updateAuthority.toString();
   metadata.playerAuthority = metadata.playerAuthority.toString();
+  metadata.battleAuthority = metadata.battleAuthority.toString();
   return metadata;
 };

@@ -50,6 +50,7 @@ pub struct CreateGameMetadataAccountsLogicArgs<'a> {
     pub player_authority_info: &'a AccountInfo<'a>,
     pub payer_account_info: &'a AccountInfo<'a>,
     pub update_authority_info: &'a AccountInfo<'a>,
+    pub _battle_authority_info: Option<&'a AccountInfo<'a>>,
     pub system_account_info: &'a AccountInfo<'a>,
     pub rent_info: &'a AccountInfo<'a>,
 }
@@ -67,6 +68,7 @@ pub fn process_create_game_metadata_accounts_logic(
     program_id: &Pubkey,
     accounts: CreateGameMetadataAccountsLogicArgs,
     base_stats: Stats,
+    level_stats: Stats,
     curr_stats: Stats,
     move0: Move,
     move1: Move,
@@ -79,6 +81,7 @@ pub fn process_create_game_metadata_accounts_logic(
         player_authority_info,
         payer_account_info,
         update_authority_info,
+        _battle_authority_info,
         system_account_info,
         rent_info,
     } = accounts;
@@ -125,12 +128,18 @@ pub fn process_create_game_metadata_accounts_logic(
 
     metadata.player_authority = *player_authority_info.key;
     metadata.base_stats = base_stats;
+    metadata.level_stats = level_stats;
     metadata.curr_stats = curr_stats;
     metadata.move0 = move0;
     metadata.move1 = move1;
     metadata.move2 = move2;
     metadata.move3 = move3;
     metadata.update_authority = *update_authority_info.key;
+
+    match _battle_authority_info {
+        Some(x) => metadata.battle_authority = *x.key,
+        None => metadata.battle_authority = Pubkey::default(),
+    }
 
     //puff_out_data_fields(&mut metadata);
 

@@ -25,7 +25,6 @@ use {
         //program_error::ProgramError,
         pubkey::Pubkey,
     },
-    std::str,
     //spl_token::state::{Account, Mint},
 };
 
@@ -35,6 +34,7 @@ pub fn process_instruction<'a>(
     input: &[u8],
 ) -> ProgramResult {
     msg!("process_instruction");
+    msg!("{:x?}", input);
     let instruction = GameMetadataInstruction::try_from_slice(input)?;
     match instruction {
         GameMetadataInstruction::CreateMetadataAccount(args) => {
@@ -44,12 +44,38 @@ pub fn process_instruction<'a>(
                 program_id,
                 accounts,
                 args.base_stats,
+                args.level_stats,
                 args.curr_stats,
                 args.move0,
                 args.move1,
                 args.move2,
                 args.move3,
             )
+        }
+
+        GameMetadataInstruction::UpdateMetadataAccount(args) =>
+        {
+            Ok(())
+        }
+
+        GameMetadataInstruction::AwardExperience(args) =>
+        {
+            Ok(())
+        }
+
+        GameMetadataInstruction::UpdateStats(args) =>
+        {
+            Ok(())
+        }
+
+        GameMetadataInstruction::EnterBattle(args) =>
+        {
+            Ok(())
+        }
+
+        GameMetadataInstruction::AddMove(args) =>
+        {
+            Ok(())
         }
     }
 }
@@ -58,6 +84,7 @@ pub fn process_create_metadata_accounts<'a>(
     program_id: &'a Pubkey,
     accounts: &'a [AccountInfo<'a>],
     base_stats: Stats,
+    level_stats: Stats,
     curr_stats: Stats,
     move0: Move,
     move1: Move,
@@ -70,6 +97,7 @@ pub fn process_create_metadata_accounts<'a>(
     let player_authority_info = next_account_info(account_info_iter)?;
     let payer_account_info = next_account_info(account_info_iter)?;
     let update_authority_info = next_account_info(account_info_iter)?;
+    let _battle_authority_info = None;
     let system_account_info = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
     
@@ -81,10 +109,12 @@ pub fn process_create_metadata_accounts<'a>(
             player_authority_info,
             payer_account_info,
             update_authority_info,
+            _battle_authority_info,
             system_account_info,
             rent_info,
         },
         base_stats,
+        level_stats,
         curr_stats,
         move0,
         move1,
