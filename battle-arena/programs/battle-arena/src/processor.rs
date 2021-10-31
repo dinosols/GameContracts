@@ -17,7 +17,7 @@ use {
         },
     },
     //arrayref::array_ref,
-    borsh::{BorshDeserialize/*, BorshSerialize*/},
+    borsh::{BorshDeserialize, BorshSerialize},
     solana_program::{
         account_info::{next_account_info, AccountInfo},
         entrypoint::ProgramResult,
@@ -44,6 +44,14 @@ pub fn process_instruction<'a>(
                 program_id,
                 accounts,
                 args.date,
+            )
+        }
+        BattleInstruction::JoinBattle(args) => {
+            msg!("Instruction: Join the Battle");
+            
+            process_join_battle(
+                program_id,
+                accounts,
             )
         }
     }
@@ -76,4 +84,22 @@ pub fn process_create_battle_accounts<'a>(
         },
         date,
     )
+}
+
+pub fn process_join_battle<'a>(
+    program_id: &'a Pubkey,
+    accounts: &'a [AccountInfo<'a>],
+) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+    let battle_account_info = next_account_info(account_info_iter)?;
+    let player_account_info = next_account_info(account_info_iter)?;
+    let payer_account_info = next_account_info(account_info_iter)?;
+    let system_account_info = next_account_info(account_info_iter)?;
+
+    let mut battle = Battle::from_account_info(battle_account_info)?;
+
+    battle.player_1.wallet = *player_account_info.key;
+    battle.serialize(&mut *battle_account_info.data.borrow_mut())?;
+
+    Ok(())
 }

@@ -56,12 +56,12 @@ pub enum Status {
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub struct Player {
-    wallet: Pubkey,
-    team_member0: Pubkey,
-    team_member1: Pubkey,
-    team_member2: Pubkey,
-    current_move: Move,
-    active_team_member: u8,
+    pub wallet: Pubkey,
+    pub team_member0: Pubkey,
+    pub team_member1: Pubkey,
+    pub team_member2: Pubkey,
+    pub current_move: Move,
+    pub active_team_member: u8,
 
 }
 

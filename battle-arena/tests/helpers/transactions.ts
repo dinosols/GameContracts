@@ -76,7 +76,6 @@ export async function sendSignedTransaction({
     successMessage?: string;
     timeout?: number;
 }): Promise<{ txid: string; slot: number }> {
-    console.log(signedTransaction);
     const rawTransaction = signedTransaction.serialize();
     const startTime = getUnixTs();
     let slot = 0;
@@ -162,8 +161,6 @@ async function simulateTransaction(
         connection._disableBlockhashCaching,
     );
 
-    //console.log("Transaction:");
-    //console.log(transaction);
     const signData = transaction.serializeMessage();
     // @ts-ignore
     const wireTransaction = transaction._serialize(signData);

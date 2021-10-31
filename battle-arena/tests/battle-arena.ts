@@ -3,6 +3,7 @@ const anchor = require('@project-serum/anchor');
 const assert = require('assert');
 import {
   createBattleInstruction,
+  joinBattleInstruction,
 } from './helpers/instructions';
 import { sendTransactionWithRetryWithKeypair } from './helpers/transactions';
 import {
@@ -11,9 +12,8 @@ import {
 import {
   Stats,
   Move,
+  JoinBattleArgs,
   CreateBattleArgs,
-  //     CreateMasterEditionArgs,
-  //GameMetadataInfo,
   BATTLE_SCHEMA,
   decodeBattle,
 } from './helpers/schema';
@@ -41,9 +41,10 @@ describe('battle-arena', () => {
   let player1 = null;
   let player2 = null;
 
+  let battleAccount = null;
+
   it('Create Players', async () => {
     player1 = provider.wallet.publicKey;
-    console.log(provider.wallet.publicKey.toString());
     player2 = anchor.web3.Keypair.generate();
   });
 
@@ -62,9 +63,7 @@ describe('battle-arena', () => {
     const dateString: String = YYYY + "-" + MM + "-" + DD + " " +
       hh + ":" + mm + ":" + ss;
 
-    const battleAccount = await getBattlePDA(player1, program.programId, dateString);
-    console.log(program.programId.toString());
-    console.log(battleAccount.toString());
+    battleAccount = await getBattlePDA(player1, program.programId, dateString);
 
     const battleArgs =
       new CreateBattleArgs({
@@ -111,5 +110,60 @@ describe('battle-arena', () => {
     const battleAccountInfo = await provider.connection.getAccountInfo(battleAccount);
     const battle = decodeBattle(battleAccountInfo.data);
     console.log(battle);
+  });
+
+  it('Join Battle', async () => {
+    // Join Battle
+    instructions = [];
+
+    const battleArgs =
+      new JoinBattleArgs({
+      });
+
+      console.log(battleArgs.instruction);
+
+    let txnData = Buffer.from(
+      serialize(
+        BATTLE_SCHEMA,
+        battleArgs,
+      ),
+    );
+
+    console.log(txnData);
+
+    instructions.push(
+      joinBattleInstruction(
+        battleAccount,
+        provider.wallet.publicKey,
+        provider.wallet.publicKey,
+        txnData,
+        program.programId,
+      ),
+    );
+
+    signers = [provider.wallet.payer];
+
+    console.log(instructions);
+    const res = await sendTransactionWithRetryWithKeypair(
+      provider.connection,
+      provider.wallet.payer,
+      instructions,
+      signers,
+    );
+
+    try {
+      await provider.connection.confirmTransaction(res.txid, 'max');
+    } catch {
+      // ignore
+    }
+
+    // Force wait for max confirmations
+    await provider.connection.getParsedConfirmedTransaction(res.txid, 'confirmed');
+
+    const battleAccountInfo = await provider.connection.getAccountInfo(battleAccount);
+    const battle = decodeBattle(battleAccountInfo.data);
+    console.log(battle);
+
+
   });
 });

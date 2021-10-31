@@ -66,3 +66,39 @@ export function createBattleInstruction(
         data: txnData,
     });
 }
+
+export function joinBattleInstruction(
+    battleAccount: PublicKey,
+    playerAccount: PublicKey,
+    payer: PublicKey,
+    txnData: Buffer,
+    battle_program_id,
+) {
+    const keys = [
+        {
+            pubkey: battleAccount,
+            isSigner: false,
+            isWritable: true,
+        },
+        {
+            pubkey: playerAccount,
+            isSigner: true,
+            isWritable: false,
+        },
+        {
+            pubkey: payer,
+            isSigner: true,
+            isWritable: false,
+        },
+        {
+            pubkey: SystemProgram.programId,
+            isSigner: false,
+            isWritable: false,
+        },
+    ];
+    return new TransactionInstruction({
+        keys,
+        programId: battle_program_id,
+        data: txnData,
+    });
+}

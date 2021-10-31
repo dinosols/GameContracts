@@ -98,12 +98,6 @@ pub fn process_create_battle_accounts_logic(
         &[battle_bump_seed],
     ];
 
-    msg!(&PREFIX);
-    msg!(&program_id.to_string());
-    msg!(&player_account_info.key.to_string());
-    msg!(&date);
-    msg!(&battle_key.to_string());
-
     if battle_account_info.key != &battle_key {
         return Err(BattleError::InvalidMetadataKey.into());
     }

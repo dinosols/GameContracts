@@ -84,6 +84,13 @@ export class CreateBattleArgs {
   }
 }
 
+export class JoinBattleArgs {
+  instruction: number = 1;
+
+  constructor(args: {}) {
+  }
+}
+
 export const BATTLE_SCHEMA = new Map<any, any>([
   [
     CreateBattleArgs,
@@ -92,6 +99,15 @@ export const BATTLE_SCHEMA = new Map<any, any>([
       fields: [
         ['instruction', 'u8'],
         ['date', 'string'],
+      ],
+    },
+  ],
+  [
+    JoinBattleArgs,
+    {
+      kind: 'struct',
+      fields: [
+        ['instruction', 'u8'],
       ],
     },
   ],

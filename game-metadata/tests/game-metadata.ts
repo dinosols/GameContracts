@@ -202,7 +202,6 @@ describe('game-metadata', () => {
 
         // Force wait for max confirmations
         await provider.connection.getParsedConfirmedTransaction(res.txid, 'confirmed');
-        log.info('NFT created', res.txid);
 
         const metadataAccountInfo = await provider.connection.getAccountInfo(metadataAccount);
         const metadata = decodeMetadata(metadataAccountInfo.data);
