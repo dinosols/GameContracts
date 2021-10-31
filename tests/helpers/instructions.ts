@@ -116,3 +116,92 @@ export function createGameMetadataInstruction(
         data: txnData,
     });
 }
+
+export function createBattleInstruction(
+    battleAccount: PublicKey,
+    game: PublicKey,
+    playerAccount: PublicKey,
+    payer: PublicKey,
+    updateAuthority: PublicKey,
+    txnData: Buffer,
+    battle_program_id,
+) {
+    const keys = [
+        {
+            pubkey: battleAccount,
+            isSigner: false,
+            isWritable: true,
+        },
+        {
+            pubkey: game,
+            isSigner: false,
+            isWritable: false,
+        },
+        {
+            pubkey: playerAccount,
+            isSigner: true,
+            isWritable: false,
+        },
+        {
+            pubkey: payer,
+            isSigner: true,
+            isWritable: false,
+        },
+        {
+            pubkey: updateAuthority,
+            isSigner: false,
+            isWritable: false,
+        },
+        {
+            pubkey: SystemProgram.programId,
+            isSigner: false,
+            isWritable: false,
+        },
+        {
+            pubkey: SYSVAR_RENT_PUBKEY,
+            isSigner: false,
+            isWritable: false,
+        },
+    ];
+    return new TransactionInstruction({
+        keys,
+        programId: battle_program_id,
+        data: txnData,
+    });
+}
+
+export function joinBattleInstruction(
+    battleAccount: PublicKey,
+    playerAccount: PublicKey,
+    payer: PublicKey,
+    txnData: Buffer,
+    battle_program_id,
+) {
+    const keys = [
+        {
+            pubkey: battleAccount,
+            isSigner: false,
+            isWritable: true,
+        },
+        {
+            pubkey: playerAccount,
+            isSigner: true,
+            isWritable: false,
+        },
+        {
+            pubkey: payer,
+            isSigner: true,
+            isWritable: false,
+        },
+        {
+            pubkey: SystemProgram.programId,
+            isSigner: false,
+            isWritable: false,
+        },
+    ];
+    return new TransactionInstruction({
+        keys,
+        programId: battle_program_id,
+        data: txnData,
+    });
+}

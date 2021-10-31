@@ -1,5 +1,6 @@
 [programs.localnet]
 game_metadata = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+battle_arena = "4RKZfwgWxUz1XEmgPnYkZTSQpzaKGPS9pnGbPTghbZyQ"
 
 [registry]
 url = "https://anchor.projectserum.com"

@@ -75,6 +75,33 @@ export class Player {
   }
 }
 
+export class CreateGameMetadataArgs {
+  instruction: number = 0;
+  experience: number;
+  level: number;
+  baseStats: Stats;
+  levelStats: Stats;
+  currStats: Stats;
+  //moves: Array<Move>;
+  move0: Move;
+  move1: Move;
+  move2: Move;
+  move3: Move;
+
+  constructor(args: { experience: number; level: number; baseStats: Stats; levelStats: Stats; currStats: Stats; move0: Move; move1: Move; move2: Move; move3: Move; }) {
+    this.experience = args.experience;
+    this.level = args.level;
+    this.baseStats = args.baseStats;
+    this.levelStats = args.levelStats;
+    this.currStats = args.currStats;
+  //   //this.moves = [...args.moves];
+    this.move0 = args.move0;
+    this.move1 = args.move1;
+    this.move2 = args.move2;
+    this.move3 = args.move3;
+  }
+}
+
 export class CreateBattleArgs {
   instruction: number = 0;
   date: String;
@@ -90,6 +117,52 @@ export class JoinBattleArgs {
   constructor(args: {}) {
   }
 }
+
+export const GAME_METADATA_SCHEMA = new Map<any, any>([
+  [
+    CreateGameMetadataArgs,
+    {
+      kind: 'struct',
+      fields: [
+        ['instruction', 'u8'],
+        ['experience', 'u32'],
+        ['level', 'u16'],
+        ['baseStats', Stats],
+        ['levelStats', Stats],
+        ['currStats', Stats],
+        ['move0', Move],
+        ['move1', Move],
+        ['move2', Move],
+        ['move3', Move],
+      ],
+    },
+  ],
+  [
+    Stats,
+    {
+      kind: 'struct',
+      fields: [
+        ['health', 'u16'],
+        ['attack', 'u16'],
+        ['defense', 'u16'],
+        ['speed', 'u16'],
+        ['agility', 'u16']
+      ],
+    },
+  ],
+  [
+    Move,
+    {
+      kind: 'struct',
+      fields: [
+        ['move_id', 'u8'],
+        ['damage_modifier', 'u8'],
+        ['status_effect_chance', 'u8'],
+        ['status_effect', 'u8']
+      ],
+    },
+  ],
+]);
 
 export const BATTLE_SCHEMA = new Map<any, any>([
   [
@@ -137,6 +210,37 @@ const PLAYER_LAYOUT = struct([
   u8('activeTeamMember'),
 ])
 
+const METADATA_LAYOUT = struct([
+  publicKey('updateAuthority'),
+  publicKey('playerAuthority'),
+  publicKey('battleAuthority'),
+  u32('experience'),
+  u16('level'),
+  STATS_LAYOUT.replicate('baseStats'),
+  STATS_LAYOUT.replicate('levelStats'),
+  STATS_LAYOUT.replicate('currStats'),
+  //u16('padding'),
+  MOVE_LAYOUT.replicate('move0'),
+  MOVE_LAYOUT.replicate('move1'),
+  MOVE_LAYOUT.replicate('move2'),
+  MOVE_LAYOUT.replicate('move3'),
+]);
+
+export interface Metadata {
+  updateAuthority: PublicKey;
+  playerAuthority: PublicKey;
+  battleAuthority: PublicKey;
+  experience: number;
+  level: number;
+  baseStats: Stats;
+  levelStats: Stats;
+  currStats: Stats;
+  move0: Move;
+  move1: Move;
+  move2: Move;
+  move3: Move;
+}
+
 const BATTLE_LAYOUT = struct([
   str('date'),
   publicKey('updateAuthority'),
@@ -154,6 +258,17 @@ export interface Battle {
   status: u8;
   round_number: u8;
 }
+
+// eslint-disable-next-line no-control-regex
+const METADATA_REPLACE = new RegExp('\u0000', '');
+
+export function decodeMetadata(buffer: Buffer): Metadata {
+  const metadata: any = METADATA_LAYOUT.decode(buffer);
+  metadata.updateAuthority = metadata.updateAuthority.toString();
+  metadata.playerAuthority = metadata.playerAuthority.toString();
+  metadata.battleAuthority = metadata.battleAuthority.toString();
+  return metadata;
+};
 
 // eslint-disable-next-line no-control-regex
 const BATTLE_REPLACE = new RegExp('\x00', '');
