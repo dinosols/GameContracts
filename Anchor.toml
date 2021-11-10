@@ -10,4 +10,4 @@ cluster = "localnet"
 wallet = "/home/kelliott/.config/solana/id.json"
 
 [scripts]
-test = "ts-mocha -t 1000000 tests/*.ts"
+test = "ts-mocha -t 1000000 tests/game-metadata.ts tests/battle-arena.ts"

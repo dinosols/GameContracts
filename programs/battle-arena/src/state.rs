@@ -8,6 +8,8 @@ use {
     },
 };
 
+// TODO: Remove copy of structs from GameMetadata crate
+
 /// Prefix used in PDA derivations to avoid collisions with other programs.
 pub const PREFIX: &str = "battle";
 

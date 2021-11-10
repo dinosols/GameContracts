@@ -4,8 +4,9 @@ use {
     },
     borsh::{BorshDeserialize, BorshSerialize},
     solana_program::{
-        //instruction::{AccountMeta, Instruction},
+        instruction::{AccountMeta, Instruction},
         pubkey::Pubkey,
+        msg,
         //sysvar,
     },
 };
@@ -99,4 +100,24 @@ pub enum GameMetadataInstruction {
     ///   0. `[writable]` Metadata account
     ///   1. `[signer]` Player Authority
     AddMove(AddMoveArgs),
+}
+
+pub fn update_stats_instruction(
+    program_id: Pubkey,
+    metadata_account: Pubkey,
+    payer_account: Pubkey,
+    new_stats: Stats,
+) -> Instruction {
+    msg!("Entering update_stats_instruction");
+    let program_account_meta = AccountMeta::new_readonly(program_id, false);
+    let metadata_account_meta = AccountMeta::new(metadata_account, false);
+    let payer_account_meta = AccountMeta::new_readonly(payer_account, false);
+    msg!(&new_stats.health.to_string());
+
+    msg!("Creating Instruction with program_id: {}", &program_id.to_string());
+    Instruction {
+        program_id,
+        accounts: vec![program_account_meta, metadata_account_meta, payer_account_meta],
+        data: GameMetadataInstruction::UpdateStats(UpdateStatsArgs{new_stats}).try_to_vec().unwrap(),
+    }
 }

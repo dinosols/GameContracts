@@ -3,7 +3,7 @@ use {
     crate::{
         error::BattleError,
         state::{
-            PREFIX, Battle, MAX_BATTLE_LEN, MAX_DATE_LENGTH
+            PREFIX, Battle, MAX_BATTLE_LEN, MAX_DATE_LENGTH, Status
             //get_reservation_list, Data, EditionMarker, Key, MasterEditionV1, Metadata, EDITION,
             //EDITION_MARKER_BIT_SIZE, MAX_CREATOR_LIMIT, MAX_EDITION_LEN, MAX_EDITION_MARKER_SIZE,
             //MAX_MASTER_EDITION_LEN, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH,
@@ -46,7 +46,7 @@ pub fn assert_data_valid(
 
 pub struct CreateBattleAccountsLogicArgs<'a> {
     pub battle_account_info: &'a AccountInfo<'a>,
-    pub game_info: &'a AccountInfo<'a>,
+    pub _game_info: &'a AccountInfo<'a>,
     pub player_account_info: &'a AccountInfo<'a>,
     pub payer_account_info: &'a AccountInfo<'a>,
     pub update_authority_info: &'a AccountInfo<'a>,
@@ -70,7 +70,7 @@ pub fn process_create_battle_accounts_logic(
 ) -> ProgramResult {
     let CreateBattleAccountsLogicArgs {
         battle_account_info,
-        game_info,
+        _game_info,
         player_account_info,
         payer_account_info,
         update_authority_info,
@@ -122,6 +122,7 @@ pub fn process_create_battle_accounts_logic(
 
     battle.date = date;
     battle.update_authority = *update_authority_info.key;
+    battle.status = Status::None;
 
     //match _battle_authority_info {
     //    Some(x) => battle.battle_authority = *x.key,

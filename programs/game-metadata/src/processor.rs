@@ -3,7 +3,7 @@ use {
         //error::GameMetadataError,
         instruction::GameMetadataInstruction,
         state::{
-            Stats, Move, /*GameMetadata, */
+            Stats, Move, GameMetadata,
         },
         utils::{
         //    assert_data_valid, assert_derivation, assert_initialized,
@@ -17,7 +17,7 @@ use {
         },
     },
     //arrayref::array_ref,
-    borsh::{BorshDeserialize/*, BorshSerialize*/},
+    borsh::{BorshDeserialize, BorshSerialize},
     solana_program::{
         account_info::{next_account_info, AccountInfo},
         entrypoint::ProgramResult,
@@ -53,27 +53,33 @@ pub fn process_instruction<'a>(
             )
         }
 
-        GameMetadataInstruction::UpdateMetadataAccount(args) =>
+        GameMetadataInstruction::UpdateMetadataAccount(_args) =>
         {
             Ok(())
         }
 
-        GameMetadataInstruction::AwardExperience(args) =>
+        GameMetadataInstruction::AwardExperience(_args) =>
         {
             Ok(())
         }
 
         GameMetadataInstruction::UpdateStats(args) =>
         {
-            Ok(())
+            msg!("Instruction: Update Stats");
+
+            process_update_stats(
+                program_id,
+                accounts,
+                args.new_stats,
+            )
         }
 
-        GameMetadataInstruction::EnterBattle(args) =>
+        GameMetadataInstruction::EnterBattle(_args) =>
         {
             Ok(())
         }
 
-        GameMetadataInstruction::AddMove(args) =>
+        GameMetadataInstruction::AddMove(_args) =>
         {
             Ok(())
         }
@@ -121,4 +127,32 @@ pub fn process_create_metadata_accounts<'a>(
         move2,
         move3,
     )
+}
+
+pub fn process_update_stats<'a>(
+    program_id: &'a Pubkey,
+    accounts: &'a [AccountInfo<'a>],
+    new_stats: Stats,
+) -> ProgramResult {
+    msg!("Entering process_update_stats");
+    let account_info_iter = &mut accounts.iter();
+    let program_account_info = next_account_info(account_info_iter)?;
+    let metadata_account_info = next_account_info(account_info_iter)?;
+    let payer_account_info = next_account_info(account_info_iter)?;
+
+    msg!("Program ID is {} and owner of {} is {}.",
+        &program_id.to_string(),
+        &metadata_account_info.key.to_string(),
+        &metadata_account_info.owner.to_string()
+    );
+
+    let mut metadata = GameMetadata::from_account_info(&metadata_account_info).unwrap();
+    msg!("Curr Stats: {}", &metadata.curr_stats.health.to_string());
+    msg!("New Stats: {}", &new_stats.health.to_string());
+
+    metadata.curr_stats = new_stats.clone();
+
+    metadata.serialize(&mut *metadata_account_info.data.borrow_mut())?;
+
+    Ok(())
 }

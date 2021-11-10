@@ -9,6 +9,7 @@ import { sendTransactionWithRetryWithKeypair } from './helpers/transactions';
 import {
     getTokenWallet,
     getMetadataPDA,
+    mintToken,
     //getGameMetadata,
 } from './helpers/accounts';
 import {
@@ -43,55 +44,16 @@ describe('game-metadata', () => {
     const program = anchor.workspace.GameMetadata;
 
     let mint = null;
-    let instructions: TransactionInstruction[] = [];
-
-    let userTokenAccountAddress = null;
-    let signers: anchor.web3.Keypair[]
+    // @ts-ignore
 
     it('Mint Token', async () => {
         // Allocate memory for the account
-        const mintRent = await provider.connection.getMinimumBalanceForRentExemption(
-            MintLayout.span,
-        );
-
-        // Generate a mint
-        mint = anchor.web3.Keypair.generate();
-        signers = [mint, provider.wallet.payer];
-
-        instructions.push(
-            SystemProgram.createAccount({
-                fromPubkey: provider.wallet.publicKey,
-                newAccountPubkey: mint.publicKey,
-                lamports: mintRent,
-                space: MintLayout.span,
-                programId: TOKEN_PROGRAM_ID,
-            }),
-        );
-        instructions.push(
-            Token.createInitMintInstruction(
-                TOKEN_PROGRAM_ID,
-                mint.publicKey,
-                0,
-                provider.wallet.publicKey,
-                provider.wallet.publicKey,
-            ),
-        );
-
-        userTokenAccountAddress = await getTokenWallet(
-            provider.wallet.publicKey,
-            mint.publicKey,
-        );
-        instructions.push(
-            createAssociatedTokenAccountInstruction(
-                userTokenAccountAddress,
-                provider.wallet.publicKey,
-                provider.wallet.publicKey,
-                mint.publicKey,
-            ),
-        );
+        mint = await mintToken(provider, provider.wallet.publicKey);
     });
 
     it('Create Game Metadata', async () => {
+        let instructions: TransactionInstruction[] = [];
+
         // Create metadata
         const metadataAccount = await getMetadataPDA(mint.publicKey, program.programId);
 
@@ -176,22 +138,11 @@ describe('game-metadata', () => {
             ),
         );
 
-        instructions.push(
-            Token.createMintToInstruction(
-                TOKEN_PROGRAM_ID,
-                mint.publicKey,
-                userTokenAccountAddress,
-                provider.wallet.publicKey,
-                [],
-                1,
-            ),
-        );
-
         const res = await sendTransactionWithRetryWithKeypair(
             provider.connection,
             provider.wallet.payer,
             instructions,
-            signers,
+            [provider.wallet.payer],
         );
 
         try {

@@ -118,6 +118,41 @@ export class JoinBattleArgs {
   }
 }
 
+export class ChooseTeamMemberArgs {
+  instruction: number = 2;
+  index: u8;
+
+  constructor(args: {index: u8}){
+    this.index = args.index;
+  }
+}
+
+export class SubmitActionArgs {
+  instruction: number = 3;
+  move: Move;
+
+  constructor(args: {move: Move}){
+    this.move = args.move;
+  }
+}
+
+export class UpdateArgs {
+  instruction: number = 4;
+
+  constructor(args: {}){
+    
+  }
+}
+
+export class UpdateStatsArgs {
+  instruction: number = 3;
+  stats: Stats;
+
+  constructor(args: {stats: Stats}){
+    this.stats = args.stats;
+  }
+}
+
 export const GAME_METADATA_SCHEMA = new Map<any, any>([
   [
     CreateGameMetadataArgs,
@@ -134,6 +169,16 @@ export const GAME_METADATA_SCHEMA = new Map<any, any>([
         ['move1', Move],
         ['move2', Move],
         ['move3', Move],
+      ],
+    },
+  ],
+  [
+    UpdateStatsArgs,
+    {
+      kind: 'struct',
+      fields: [
+        ['instruction', 'u8'],
+        ['stats', Stats],
       ],
     },
   ],
@@ -184,6 +229,47 @@ export const BATTLE_SCHEMA = new Map<any, any>([
       ],
     },
   ],
+  [
+    ChooseTeamMemberArgs,
+    {
+      kind: 'struct',
+      fields: [
+        ['instruction', 'u8'],
+        ['index', 'u8'],
+      ]
+    },
+  ],
+  [
+    SubmitActionArgs,
+    {
+      kind: 'struct',
+      fields: [
+        ['instruction', 'u8'],
+        ['move', Move],
+      ],
+    }
+  ],
+  [
+    UpdateArgs,
+    {
+      kind: 'struct',
+      fields: [
+        ['instruction', 'u8'],
+      ],
+    }
+  ],
+  [
+    Move,
+    {
+      kind: 'struct',
+      fields: [
+        ['move_id', 'u8'],
+        ['damage_modifier', 'u8'],
+        ['status_effect_chance', 'u8'],
+        ['status_effect', 'u8']
+      ],
+    },
+  ],
 ]);
 
 const STATS_LAYOUT = struct([
@@ -203,11 +289,11 @@ const MOVE_LAYOUT = struct([
 
 const PLAYER_LAYOUT = struct([
   publicKey('wallet'),
-  publicKey('teamMember0'),
-  publicKey('teamMember1'),
-  publicKey('teamMember2'),
-  MOVE_LAYOUT.replicate('currentMove'),
-  u8('activeTeamMember'),
+  publicKey('team_member0'),
+  publicKey('team_member1'),
+  publicKey('team_member2'),
+  MOVE_LAYOUT.replicate('current_move'),
+  u8('active_team_member'),
 ])
 
 const METADATA_LAYOUT = struct([
@@ -244,8 +330,8 @@ export interface Metadata {
 const BATTLE_LAYOUT = struct([
   str('date'),
   publicKey('updateAuthority'),
-  PLAYER_LAYOUT.replicate("player1"),
-  PLAYER_LAYOUT.replicate("player2"),
+  PLAYER_LAYOUT.replicate("player_1"),
+  PLAYER_LAYOUT.replicate("player_2"),
   u8("status"),
   u8('roundNumber'),
 ]);
@@ -271,19 +357,20 @@ export function decodeMetadata(buffer: Buffer): Metadata {
 };
 
 // eslint-disable-next-line no-control-regex
-const BATTLE_REPLACE = new RegExp('\x00', '');
+const BATTLE_REPLACE = new RegExp('\u0000', 'g');
 
 export function decodeBattle(buffer: Buffer): Battle {
-  const battle: any = BATTLE_LAYOUT.decode(buffer);
-  battle.updateAuthority = battle.updateAuthority.toString();
-  battle.player1.wallet = battle.player1.wallet.toString();
-  battle.player1.teamMember0 = battle.player1.teamMember0.toString();
-  battle.player1.teamMember1 = battle.player1.teamMember1.toString();
-  battle.player1.teamMember2 = battle.player1.teamMember2.toString();
-  battle.player2.wallet = battle.player2.wallet.toString();
-  battle.player2.teamMember0 = battle.player2.teamMember0.toString();
-  battle.player2.teamMember1 = battle.player2.teamMember1.toString();
-  battle.player2.teamMember2 = battle.player2.teamMember2.toString();
+  const battle: Battle = BATTLE_LAYOUT.decode(buffer);
+  battle.date = battle.date.replace(BATTLE_REPLACE, '');
+  // battle.updateAuthority = battle.updateAuthority;
+  // battle.player1.wallet = battle.player1.wallet;
+  // battle.player1.teamMember0 = battle.player1.teamMember0;
+  // battle.player1.teamMember1 = battle.player1.teamMember1;
+  // battle.player1.teamMember2 = battle.player1.teamMember2;
+  // battle.player2.wallet = battle.player2.wallet;
+  // battle.player2.teamMember0 = battle.player2.teamMember0;
+  // battle.player2.teamMember1 = battle.player2.teamMember1;
+  // battle.player2.teamMember2 = battle.player2.teamMember2;
   battle.date = battle.date.replace(BATTLE_REPLACE, '');
   return battle;
 };
