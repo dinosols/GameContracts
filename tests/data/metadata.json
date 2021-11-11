@@ -1,0 +1,24 @@
+{
+    "name": "Test Dinosol",
+    "symbol": "",
+    "description": "",
+    "seller_fee_basis_points": 100,
+    "image": "https://dinosols.app/images/Trey.png",
+    "attributes": [],
+    "external_url": "",
+    "properties": {
+        "category": "image",
+        "files": [
+            {
+                "type": "image/png",
+                "uri": "https://dinosols.app/images/Trey.png"
+            }
+        ],
+        "creators": [
+            {
+                "address": "3HxqsUguP6E7CNqjvpEAnJ8v86qbyJgWvN2idAKygLdD",
+                "share": 100
+            }
+        ]
+    }
+}
