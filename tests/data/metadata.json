@@ -4,7 +4,16 @@
     "description": "",
     "seller_fee_basis_points": 100,
     "image": "https://dinosols.app/images/Trey.png",
-    "attributes": [],
+    "attributes": [
+        {
+            "trait_type": "neck",
+            "value": "skinnytie"
+        },
+        {
+            "trait_type": "nose",
+            "value": "nose ring"
+        }
+    ],
     "external_url": "",
     "properties": {
         "category": "image",

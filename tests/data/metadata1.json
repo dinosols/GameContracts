@@ -4,7 +4,24 @@
     "description": "",
     "seller_fee_basis_points": 100,
     "image": "https://dinosols.app/images/Dew.png",
-    "attributes": [],
+    "attributes": [
+        {
+            "trait_type": "eyes",
+            "value": "pit vipers"
+        },
+        {
+            "trait_type": "mouth",
+            "value": "dragon breath"
+        },
+        {
+            "trait_type": "neck",
+            "value": "skinny tie"
+        },
+        {
+            "trait_type": "skin",
+            "value": "sol tattoo"
+        }
+    ],
     "external_url": "",
     "properties": {
         "category": "image",
