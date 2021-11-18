@@ -14,11 +14,14 @@ import {
     decodeBattle,
     decodeMetadata,
     EnterBattleArgs,
+    UpdateStatsArgs,
+    Stats,
 } from '../common/helpers/schema';
 import { serialize } from 'borsh';
 import {
     createGameMetadataInstruction,
     enterBattleInstruction,
+    updateStatsInstruction,
 } from '../common/helpers/instructions';
 import { sendTransactionWithRetryWithKeypair } from '../common/helpers/transactions';
 
@@ -111,6 +114,68 @@ programCommand('display_meta')
         console.log(metadata);
     });
 
+programCommand('heal')
+    .option('-t, --token <string>', 'Token to attach to')
+    .action(async (directory, cmd) => {
+        const GAME_METADATA_PROGRAM = new PublicKey("4iqJsF4JLz8iLuvMxYvHchtG3wqiZdsNEp1EGPphKVXw");
+        const { keypair, env, token } = cmd.opts();
+        const walletKeyPair = loadWalletKey(keypair);
+        const connection = new web3.Connection(web3.clusterApiUrl(env));
+        const mint = new PublicKey(token);
+        let instructions: TransactionInstruction[] = [];
+
+        let meta = await getMetadataPDA(mint, GAME_METADATA_PROGRAM);
+
+        const metaAccountInfo = await connection.getAccountInfo(meta);
+        const metadata = decodeMetadata(metaAccountInfo.data);
+
+        const newStats = new Stats({
+            health: metadata.levelStats.health,
+            attack: metadata.currStats.attack,
+            defense: metadata.currStats.defense,
+            speed: metadata.currStats.speed,
+            agility: metadata.currStats.agility,
+        });
+
+        const statsArgs =
+            new UpdateStatsArgs({
+                stats: newStats,
+            });
+
+        let txnData = Buffer.from(
+            serialize(
+                GAME_METADATA_SCHEMA,
+                statsArgs,
+            ),
+        );
+
+        instructions.push(
+            updateStatsInstruction(
+                meta,
+                walletKeyPair.publicKey,
+                txnData,
+                GAME_METADATA_PROGRAM,
+            ),
+        );
+
+        try {
+            const res0 = await sendTransactionWithRetryWithKeypair(
+                connection,
+                walletKeyPair,
+                instructions,
+                [walletKeyPair],
+            );
+
+            await connection.confirmTransaction(res0.txid, 'max');
+
+            // Force wait for max confirmations
+            await connection.getParsedConfirmedTransaction(res0.txid, 'confirmed');
+        } catch (e) {
+            console.log(e);
+        }
+        console.log("Player healed!");
+    });
+
 programCommand('reset_battle')
     .option('-t, --token <string>', 'Token to attach to')
     .action(async (directory, cmd) => {
@@ -122,7 +187,6 @@ programCommand('reset_battle')
         let instructions: TransactionInstruction[] = [];
 
         // Create Player 1's Dinos
-        //let p1dino0mint = new PublicKey(token);
         let meta = await getMetadataPDA(mint, GAME_METADATA_PROGRAM);
 
         const enterBattleArgs =
@@ -175,20 +239,11 @@ programCommand('get_open_battles')
         const fetched = await connection.getConfirmedSignaturesForAddress2(BATTLE_PUBKEY);
 
 
-        //console.log(fetched);
-
         let battles = [];
         for (let sigInfo of fetched) {
             let tx = (await connection.getConfirmedTransaction(sigInfo.signature)).transaction;
-            //transactions.push(tx);
-            //console.log(tx.instructions);
             for (let instruction of tx.instructions) {
-                //console.log(instruction.data[0]);
                 if (instruction.data[0] === 0) {
-                    //console.log(instruction.data);
-                    //console.log(instruction.data[0]);
-                    //console.log(instruction.keys[0].pubkey.toString());
-                    //battles.push(instruction.keys[0].pubkey);
                     try {
                         const battleAccountInfo = await connection.getAccountInfo(instruction.keys[0].pubkey);
                         const battle = decodeBattle(battleAccountInfo.data);
