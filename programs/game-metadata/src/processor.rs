@@ -74,9 +74,14 @@ pub fn process_instruction<'a>(
             )
         }
 
-        GameMetadataInstruction::EnterBattle(_args) =>
+        GameMetadataInstruction::EnterBattle(args) =>
         {
-            Ok(())
+            msg!("Instruction: Enter Battle");
+            process_enter_battle(
+                program_id,
+                accounts,
+                args.battle_authority,
+            )
         }
 
         GameMetadataInstruction::AddMove(_args) =>
@@ -136,9 +141,9 @@ pub fn process_update_stats<'a>(
 ) -> ProgramResult {
     msg!("Entering process_update_stats");
     let account_info_iter = &mut accounts.iter();
-    let program_account_info = next_account_info(account_info_iter)?;
+    let _program_account_info = next_account_info(account_info_iter)?;
     let metadata_account_info = next_account_info(account_info_iter)?;
-    let payer_account_info = next_account_info(account_info_iter)?;
+    let _payer_account_info = next_account_info(account_info_iter)?;
 
     msg!("Program ID is {} and owner of {} is {}.",
         &program_id.to_string(),
@@ -152,6 +157,27 @@ pub fn process_update_stats<'a>(
 
     metadata.curr_stats = new_stats.clone();
 
+    metadata.serialize(&mut *metadata_account_info.data.borrow_mut())?;
+
+    Ok(())
+}
+
+pub fn process_enter_battle<'a>(
+    _program_id: &'a Pubkey,
+    accounts: &'a [AccountInfo<'a>],
+    battle_authority: Pubkey,
+) -> ProgramResult {
+    msg!("New Battle Authority is {}.",
+        &battle_authority.to_string(),
+    );
+
+    let account_info_iter = &mut accounts.iter();
+    let _program_account_info = next_account_info(account_info_iter)?;
+    let metadata_account_info = next_account_info(account_info_iter)?;
+    let _payer_account_info = next_account_info(account_info_iter)?;
+
+    let mut metadata = GameMetadata::from_account_info(&metadata_account_info).unwrap();
+    metadata.battle_authority = battle_authority;
     metadata.serialize(&mut *metadata_account_info.data.borrow_mut())?;
 
     Ok(())

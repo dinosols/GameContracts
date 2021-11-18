@@ -177,6 +177,37 @@ export function updateStatsInstruction(
     });
 }
 
+export function enterBattleInstruction(
+    playerAccount: PublicKey,
+    metadataAccount: PublicKey,
+    payer: PublicKey,
+    txnData: Buffer,
+    game_metadata_program_id,
+) {
+    const keys = [
+        {
+            pubkey: playerAccount,
+            isSigner: true,
+            isWritable: false,
+        },
+        {
+            pubkey: metadataAccount,
+            isSigner: false,
+            isWritable: true,
+        },
+        {
+            pubkey: payer,
+            isSigner: true,
+            isWritable: false,
+        },
+    ];
+    return new TransactionInstruction({
+        keys,
+        programId: game_metadata_program_id,
+        data: txnData,
+    });
+}
+
 export function createBattleInstruction(
     battleAccount: PublicKey,
     game: PublicKey,
@@ -334,7 +365,7 @@ export function submitActionInstruction(
         {
             pubkey: playerAccount,
             isSigner: true,
-            isWritable: true,
+            isWritable: false,
         },
         {
             pubkey: playerTeamMember,
@@ -344,17 +375,17 @@ export function submitActionInstruction(
         {
             pubkey: opponentTeamMember,
             isSigner: false,
-            isWritable: true,
+            isWritable: false,
         },
         {
             pubkey: metadataProgramID,
             isSigner: false,
-            isWritable: true,
+            isWritable: false,
         },
         {
             pubkey: payer,
             isSigner: false,
-            isWritable: true,
+            isWritable: false,
         },
     ];
     return new TransactionInstruction({
@@ -369,7 +400,7 @@ export function updateInstruction(
     playerTeamMember: PublicKey,
     opponentTeamMember: PublicKey,
     //metadataProgramID: PublicKey,
-    //payer: PublicKey,
+    player: PublicKey,
     txnData: Buffer,
     battle_program_id,
 ) {
@@ -389,11 +420,11 @@ export function updateInstruction(
             isSigner: false,
             isWritable: true,
         },
-        /*{
-            pubkey: payer,
+        {
+            pubkey: player,
             isSigner: false,
-            isWritable: true,
-        },*/
+            isWritable: false,
+        },
     ];
     return new TransactionInstruction({
         keys,

@@ -2,16 +2,16 @@
 const anchor = require('@project-serum/anchor');
 const assert = require('assert');
 import {
-    createAssociatedTokenAccountInstruction,
+    // createAssociatedTokenAccountInstruction,
     createGameMetadataInstruction,
-} from './helpers/instructions';
-import { sendTransactionWithRetryWithKeypair } from './helpers/transactions';
+} from '../common/helpers/instructions';
+import { sendTransactionWithRetryWithKeypair } from '../common/helpers/transactions';
 import {
-    getTokenWallet,
+    // getTokenWallet,
     getMetadataPDA,
     mintToken,
     //getGameMetadata,
-} from './helpers/accounts';
+} from '../common/helpers/accounts';
 import {
     Stats,
     Move,
@@ -20,20 +20,20 @@ import {
     //GameMetadataInfo,
     GAME_METADATA_SCHEMA,
     decodeMetadata,
-} from './helpers/schema';
+} from '../common/helpers/schema';
 import { serialize } from 'borsh';
-import { TOKEN_PROGRAM_ID } from './helpers/constants';
+// import { TOKEN_PROGRAM_ID } from '../common/helpers/constants';
 //import fetch from 'node-fetch';
-import { MintLayout, Token } from '@solana/spl-token';
+// import { MintLayout, Token } from '@solana/spl-token';
 import {
-    Keypair,
-    Connection,
-    SystemProgram,
+    // Keypair,
+    // Connection,
+    // SystemProgram,
     TransactionInstruction,
-    PublicKey,
+    //PublicKey,
 } from '@solana/web3.js';
-import BN from 'bn.js';
-import log from 'loglevel';
+// import BN from 'bn.js';
+// import log from 'loglevel';
 
 describe('game-metadata', () => {
 

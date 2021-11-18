@@ -189,7 +189,7 @@ pub fn process_submit_action<'a>(
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
     let battle_account_info = next_account_info(account_info_iter)?;
-    let _player_account_info = next_account_info(account_info_iter)?;
+    let player_account_info = next_account_info(account_info_iter)?;
     let player_member_account_info = next_account_info(account_info_iter)?;
     let opponent_member_account_info = next_account_info(account_info_iter)?;
     let game_metadata_program_id = next_account_info(account_info_iter)?;
@@ -197,48 +197,61 @@ pub fn process_submit_action<'a>(
 
     let mut battle = Battle::from_account_info(battle_account_info)?;
 
-    battle.player_1.current_move = cur_move.clone();
-    battle.round_number += 1;
-    battle.status = Status::WaitingForPlayer2;
+    if (battle.player_1.wallet == *player_account_info.key)
+    {
+        msg!("Player 1 making a move.");
+        battle.player_1.current_move = cur_move.clone();
+        battle.status = Status::WaitingForPlayer2;
+    }
+    else if (battle.player_2.wallet == *player_account_info.key)
+    {
+        msg!("Player 2 making a move.");
+        battle.player_2.current_move = cur_move.clone();
+        battle.status = Status::WaitingForPlayer1;
+    }
+    else
+    {
+        msg!("Invalid Player making a move.");
+    }
 
     // TODO: Back and forth logic
     // Process the actions if both are complete
     let player_metadata = GameMetadata::from_account_info(&player_member_account_info).unwrap();
     let opponent_metadata = GameMetadata::from_account_info(&opponent_member_account_info).unwrap();
 
-    let mut new_stats = opponent_metadata.curr_stats.clone();
+    //let mut new_stats = opponent_metadata.curr_stats.clone();
 
-    msg!("Opponent's health went from");
-    msg!(&new_stats.health.to_string());
-    if player_metadata.curr_stats.attack <= opponent_metadata.curr_stats.health
-    {
-        new_stats.health -= player_metadata.curr_stats.attack;
-    }
-    else
-    {
-        new_stats.health = 0;
-    }
+    //msg!("Opponent's health went from");
+    //msg!(&new_stats.health.to_string());
+    //if player_metadata.curr_stats.attack <= opponent_metadata.curr_stats.health
+    //{
+    //    new_stats.health -= player_metadata.curr_stats.attack;
+    //}
+    //else
+    //{
+    //    new_stats.health = 0;
+    //}
 
-    if opponent_metadata.curr_stats.health == 0
-    {
-        battle.status = Status::Complete;
-    }
-    msg!("to");
-    msg!(&new_stats.health.to_string());
-    msg!("Invoking update_stats_instruction with program_id: {}.", &game_metadata_program_id.key.to_string());
+    //if opponent_metadata.curr_stats.health == 0
+    //{
+    //    battle.status = Status::Complete;
+    //}
+    //msg!("to");
+    //msg!(&new_stats.health.to_string());
+    //msg!("Invoking update_stats_instruction with program_id: {}.", &game_metadata_program_id.key.to_string());
 
-    invoke(
-        &game_metadata::instruction::update_stats_instruction(
-            *game_metadata_program_id.key,
-            *opponent_member_account_info.key,
-            *payer_account_info.key,
-            new_stats
-        ),
-        &[game_metadata_program_id.clone(), opponent_member_account_info.clone(), payer_account_info.clone()],
-    /*&[&payer_account_info]*/)?;
+    //invoke(
+    //    &game_metadata::instruction::update_stats_instruction(
+    //        *game_metadata_program_id.key,
+    //        *opponent_member_account_info.key,
+    //        *payer_account_info.key,
+    //        new_stats
+    //    ),
+    //    &[game_metadata_program_id.clone(), opponent_member_account_info.clone(), payer_account_info.clone()],
+    //&[&payer_account_info])?;
 
-    player_metadata.serialize(&mut *player_member_account_info.data.borrow_mut())?;
-    opponent_metadata.serialize(&mut *opponent_member_account_info.data.borrow_mut())?;
+    //player_metadata.serialize(&mut *player_member_account_info.data.borrow_mut())?;
+    //opponent_metadata.serialize(&mut *opponent_member_account_info.data.borrow_mut())?;
 
     battle.serialize(&mut *battle_account_info.data.borrow_mut())?;
 
@@ -253,6 +266,7 @@ pub fn process_update<'a>(
     let battle_account_info = next_account_info(account_info_iter)?;
     let player_member_account_info = next_account_info(account_info_iter)?;
     let opponent_member_account_info = next_account_info(account_info_iter)?;
+    let player_account_info = next_account_info(account_info_iter)?;
 
     let mut battle = Battle::from_account_info(battle_account_info)?;
     let player_metadata = GameMetadata::from_account_info(&player_member_account_info).unwrap();
@@ -262,6 +276,23 @@ pub fn process_update<'a>(
     {
         battle.status = Status::Complete;
     }
+
+    if (battle.player_1.wallet == *player_account_info.key)
+    {
+        msg!("Player 1 accepting a move.");
+        battle.player_2.current_move = Move::default();
+    }
+    else if (battle.player_2.wallet == *player_account_info.key)
+    {
+        msg!("Player 2 accepting a move.");
+        battle.player_1.current_move = Move::default();
+    }
+    else
+    {
+        msg!("Invalid Player making a move.");
+    }
+
+    battle.status = Status::ExecutingRound;
 
     battle.round_number += 1;
 

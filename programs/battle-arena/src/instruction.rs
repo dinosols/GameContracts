@@ -57,8 +57,8 @@ pub enum BattleInstruction {
     CreateBattle(CreateBattleAccountArgs),
     /// Join the Battle
     ///   0. `[signer]` Player
-    ///   1. `[signer]` Payer
-    ///   2. `[]` System program
+    ///   1. `[]` Metadata Account
+    ///   2. `[signer]` Payer
     JoinBattle(JoinBattleAccountArgs),
     /// Submit Action
     ///   0. `[signer]` Player

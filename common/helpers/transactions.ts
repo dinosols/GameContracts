@@ -64,6 +64,37 @@ export const sendTransactionWithRetryWithKeypair = async (
     return { txid, slot };
 };
 
+export const sendTransactionPhantom = async (
+    connection: Connection,
+    solana,
+    instructions: TransactionInstruction[],
+    commitment: Commitment = 'singleGossip',
+    includesFeePayer: boolean = false,
+    block?: BlockhashAndFeeCalculator,
+    beforeSend?: () => void,
+) => {
+    const transaction = new Transaction();
+    instructions.forEach(instruction => transaction.add(instruction));
+    transaction.recentBlockhash = (
+        block || (await connection.getRecentBlockhash(commitment))
+    ).blockhash;
+
+    transaction.feePayer = solana.publicKey;
+
+    let signed = await solana.signTransaction(transaction);
+
+    if (beforeSend) {
+        beforeSend();
+    }
+
+    const { txid, slot } = await sendSignedTransaction({
+        connection,
+        signedTransaction: signed,
+    });
+
+    return { txid, slot };
+};
+
 export async function sendSignedTransaction({
     signedTransaction,
     connection,

@@ -102,6 +102,15 @@ export class CreateGameMetadataArgs {
   }
 }
 
+export class EnterBattleArgs {
+  instruction: number = 4;
+  battle_authority: StringPublicKey;
+
+  constructor(args: {battle_authority: string}) {
+    this.battle_authority = args.battle_authority;
+  }
+}
+
 export class CreateBattleArgs {
   instruction: number = 0;
   date: String;
@@ -179,6 +188,16 @@ export const GAME_METADATA_SCHEMA = new Map<any, any>([
       fields: [
         ['instruction', 'u8'],
         ['stats', Stats],
+      ],
+    },
+  ],
+  [
+    EnterBattleArgs,
+    {
+      kind: 'struct',
+      fields: [
+        ['instruction', 'u8'],
+        ['battle_authority', 'pubkeyAsString']
       ],
     },
   ],
@@ -374,3 +393,31 @@ export function decodeBattle(buffer: Buffer): Battle {
   battle.date = battle.date.replace(BATTLE_REPLACE, '');
   return battle;
 };
+
+export const extendBorsh = () => {
+  (BinaryReader.prototype as any).readPubkey = function () {
+    const reader = this as unknown as BinaryReader;
+    const array = reader.readFixedArray(32);
+    return new PublicKey(array);
+  };
+
+  (BinaryWriter.prototype as any).writePubkey = function (value: PublicKey) {
+    const writer = this as unknown as BinaryWriter;
+    writer.writeFixedArray(value.toBuffer());
+  };
+
+  (BinaryReader.prototype as any).readPubkeyAsString = function () {
+    const reader = this as unknown as BinaryReader;
+    const array = reader.readFixedArray(32);
+    return base58.encode(array) as StringPublicKey;
+  };
+
+  (BinaryWriter.prototype as any).writePubkeyAsString = function (
+    value: StringPublicKey,
+  ) {
+    const writer = this as unknown as BinaryWriter;
+    writer.writeFixedArray(base58.decode(value));
+  };
+};
+
+extendBorsh();
