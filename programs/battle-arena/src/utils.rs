@@ -120,6 +120,7 @@ pub fn process_create_battle_accounts_logic(
        update_authority_info.is_signer,
     )?;
 
+    battle.schema_version = 1;
     battle.date = date;
     battle.update_authority = *update_authority_info.key;
     battle.status = Status::None;
@@ -143,6 +144,17 @@ pub fn puff_out_battle_fields(battle: &mut Battle) {
     }
     battle.date =
         battle.date.clone() + std::str::from_utf8(&array_of_zeroes).unwrap();
+}
+
+/// Pads the string to the desired size with `0u8`s.
+/// NOTE: it is assumed that the string's size is never larger than the given size.
+pub fn puffed_out_string(s: &String, size: usize) -> String {
+    let mut array_of_zeroes = vec![];
+    let puff_amount = size - s.len();
+    while array_of_zeroes.len() < puff_amount {
+        array_of_zeroes.push(0u8);
+    }
+    s.clone() + std::str::from_utf8(&array_of_zeroes).unwrap()
 }
 
 // pub fn try_from_slice_checked<T: BorshDeserialize>(

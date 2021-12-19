@@ -2,19 +2,33 @@ import { BinaryReader, BinaryWriter } from 'borsh';
 import base58 from 'bs58';
 import { PublicKey } from '@solana/web3.js';
 import * as BufferLayout from 'buffer-layout';
-import { rustEnum, bool, u8, publicKey, str, vec, option, struct } from '@project-serum/borsh'
-import { u16, u32 } from 'buffer-layout';
+import { rustEnum, bool, u8, publicKey, str, vec, option, struct, array } from '@project-serum/borsh'
+import { u16, u32, f32 } from 'buffer-layout';
 
 type StringPublicKey = string;
+type Float32 = number;
 
 import BN from 'bn.js';
 
+// Converts number into a 64-bit binary using its IEEE764 Representation, little endian
+function convertFloat32ToBinary(num: Float32): Uint8Array {
+  const c = new Uint8Array(new Float32Array([num]).buffer, 0, 4);
+  return c;
+}
+
+// Converts number into a 64-bit binary using its IEEE764 Representation, little endian
+function convertBinaryToFloat32(num: Uint8Array): Float32 {
+  const c = Float32Array.from(num)[0];
+  return c;
+}
+
 export class Stats {
-  health: number;
-  attack: number;
-  defense: number;
-  speed: number;
-  agility: number;
+  health: Float32;
+  attack: Float32;
+  defense: Float32;
+  speed: Float32;
+  agility: Float32;
+  rage_points: Float32;
 
   constructor(args: {
     health: number;
@@ -22,31 +36,36 @@ export class Stats {
     defense: number;
     speed: number;
     agility: number;
+    rage_points: number;
   }) {
     this.health = args.health;
     this.attack = args.attack;
     this.defense = args.defense;
     this.speed = args.speed;
     this.agility = args.agility;
+    this.rage_points = args.rage_points;
   }
 }
 
 export class Move {
-  move_id: number;
-  damage_modifier: number;
-  status_effect_chance: number;
+  move_name: string;
+  stats_modifier: Stats;
+  move_speed: Float32;
   status_effect: number;
+  status_effect_chance: number;
 
   constructor(args: {
-    move_id: number;
-    damage_modifier: number;
-    status_effect_chance: number;
+    move_name: string;
+    stats_modifier: Stats,
+    move_speed: number,
     status_effect: number;
+    status_effect_chance: number;
   }) {
-    this.move_id = args.move_id;
-    this.damage_modifier = args.damage_modifier;
-    this.status_effect_chance = args.status_effect_chance;
+    this.move_name = args.move_name;
+    this.stats_modifier = new Stats(args.stats_modifier);
+    this.move_speed = args.move_speed;
     this.status_effect = args.status_effect;
+    this.status_effect_chance = args.status_effect_chance;
   }
 }
 
@@ -82,23 +101,17 @@ export class CreateGameMetadataArgs {
   baseStats: Stats;
   levelStats: Stats;
   currStats: Stats;
-  //moves: Array<Move>;
-  move0: Move;
-  move1: Move;
-  move2: Move;
-  move3: Move;
+  status_effect: number;
+  moves: Array<Move>;
 
-  constructor(args: { experience: number; level: number; baseStats: Stats; levelStats: Stats; currStats: Stats; move0: Move; move1: Move; move2: Move; move3: Move; }) {
+  constructor(args: { experience: number; level: number; baseStats: Stats; levelStats: Stats; currStats: Stats; status_effect: number, moves: Array<Move>;}) {
     this.experience = args.experience;
     this.level = args.level;
     this.baseStats = args.baseStats;
     this.levelStats = args.levelStats;
     this.currStats = args.currStats;
-  //   //this.moves = [...args.moves];
-    this.move0 = args.move0;
-    this.move1 = args.move1;
-    this.move2 = args.move2;
-    this.move3 = args.move3;
+    this.status_effect = args.status_effect;
+    this.moves = [...args.moves];
   }
 }
 
@@ -106,16 +119,16 @@ export class EnterBattleArgs {
   instruction: number = 4;
   battle_authority: StringPublicKey;
 
-  constructor(args: {battle_authority: string}) {
+  constructor(args: { battle_authority: string }) {
     this.battle_authority = args.battle_authority;
   }
 }
 
 export class CreateBattleArgs {
   instruction: number = 0;
-  date: String;
+  date: string;
 
-  constructor(args: { date: String; }) {
+  constructor(args: { date: string; }) {
     this.date = args.date;
   }
 }
@@ -131,7 +144,7 @@ export class ChooseTeamMemberArgs {
   instruction: number = 2;
   index: u8;
 
-  constructor(args: {index: u8}){
+  constructor(args: { index: u8 }) {
     this.index = args.index;
   }
 }
@@ -140,7 +153,7 @@ export class SubmitActionArgs {
   instruction: number = 3;
   move: Move;
 
-  constructor(args: {move: Move}){
+  constructor(args: { move: Move }) {
     this.move = args.move;
   }
 }
@@ -148,8 +161,8 @@ export class SubmitActionArgs {
 export class UpdateArgs {
   instruction: number = 4;
 
-  constructor(args: {}){
-    
+  constructor(args: {}) {
+
   }
 }
 
@@ -157,7 +170,7 @@ export class UpdateStatsArgs {
   instruction: number = 3;
   stats: Stats;
 
-  constructor(args: {stats: Stats}){
+  constructor(args: { stats: Stats }) {
     this.stats = args.stats;
   }
 }
@@ -174,10 +187,8 @@ export const GAME_METADATA_SCHEMA = new Map<any, any>([
         ['baseStats', Stats],
         ['levelStats', Stats],
         ['currStats', Stats],
-        ['move0', Move],
-        ['move1', Move],
-        ['move2', Move],
-        ['move3', Move],
+        ['status_effect', 'u8'],
+        ['moves', [Move]],
       ],
     },
   ],
@@ -206,11 +217,12 @@ export const GAME_METADATA_SCHEMA = new Map<any, any>([
     {
       kind: 'struct',
       fields: [
-        ['health', 'u16'],
-        ['attack', 'u16'],
-        ['defense', 'u16'],
-        ['speed', 'u16'],
-        ['agility', 'u16']
+        ['health', 'Float32'],
+        ['attack', 'Float32'],
+        ['defense', 'Float32'],
+        ['speed', 'Float32'],
+        ['agility', 'Float32'],
+        ['rage_points', 'Float32']
       ],
     },
   ],
@@ -219,10 +231,11 @@ export const GAME_METADATA_SCHEMA = new Map<any, any>([
     {
       kind: 'struct',
       fields: [
-        ['move_id', 'u8'],
-        ['damage_modifier', 'u8'],
+        ['move_name', 'string'],
+        ['stats_modifier', Stats],
+        ['move_speed', 'Float32'],
+        ['status_effect', 'u8'],
         ['status_effect_chance', 'u8'],
-        ['status_effect', 'u8']
       ],
     },
   ],
@@ -278,32 +291,49 @@ export const BATTLE_SCHEMA = new Map<any, any>([
     }
   ],
   [
+    Stats,
+    {
+      kind: 'struct',
+      fields: [
+        ['health', 'Float32'],
+        ['attack', 'Float32'],
+        ['defense', 'Float32'],
+        ['speed', 'Float32'],
+        ['agility', 'Float32'],
+        ['rage_points', 'Float32']
+      ],
+    },
+  ],
+  [
     Move,
     {
       kind: 'struct',
       fields: [
-        ['move_id', 'u8'],
-        ['damage_modifier', 'u8'],
+        ['move_name', 'string'],
+        ['stats_modifier', Stats],
+        ['move_speed', 'Float32'],
+        ['status_effect', 'u8'],
         ['status_effect_chance', 'u8'],
-        ['status_effect', 'u8']
       ],
     },
   ],
 ]);
 
 const STATS_LAYOUT = struct([
-  u16('health'),
-  u16('attack'),
-  u16('defense'),
-  u16('speed'),
-  u16('agility'),
+  f32('health'),
+  f32('attack'),
+  f32('defense'),
+  f32('speed'),
+  f32('agility'),
+  f32('rage_points'),
 ])
 
 const MOVE_LAYOUT = struct([
-  u8('move_id'),
-  u8('damage_modifier'),
-  u8('status_effect_chance'),
+  str('move_name'),
+  STATS_LAYOUT.replicate('stats_modifier'),
+  f32('move_speed'),
   u8('status_effect'),
+  u8('status_effect_chance'),
 ])
 
 const PLAYER_LAYOUT = struct([
@@ -316,6 +346,7 @@ const PLAYER_LAYOUT = struct([
 ])
 
 const METADATA_LAYOUT = struct([
+  u32('schemaVersion'),
   publicKey('updateAuthority'),
   publicKey('playerAuthority'),
   publicKey('battleAuthority'),
@@ -324,14 +355,13 @@ const METADATA_LAYOUT = struct([
   STATS_LAYOUT.replicate('baseStats'),
   STATS_LAYOUT.replicate('levelStats'),
   STATS_LAYOUT.replicate('currStats'),
-  //u16('padding'),
-  MOVE_LAYOUT.replicate('move0'),
-  MOVE_LAYOUT.replicate('move1'),
-  MOVE_LAYOUT.replicate('move2'),
-  MOVE_LAYOUT.replicate('move3'),
+  u8('status_effect'),
+  vec(MOVE_LAYOUT.replicate('moves'), 'moves'),
+  array(u8(), 128, 'padding'),
 ]);
 
 export interface Metadata {
+  schema_version: number;
   updateAuthority: PublicKey;
   playerAuthority: PublicKey;
   battleAuthority: PublicKey;
@@ -340,23 +370,25 @@ export interface Metadata {
   baseStats: Stats;
   levelStats: Stats;
   currStats: Stats;
-  move0: Move;
-  move1: Move;
-  move2: Move;
-  move3: Move;
+  status_effect: number;
+  moves: Array<Move>;
+  padding: Array<number>;
 }
 
 const BATTLE_LAYOUT = struct([
+  u32('schemaVersion'),
   str('date'),
   publicKey('updateAuthority'),
   PLAYER_LAYOUT.replicate("player_1"),
   PLAYER_LAYOUT.replicate("player_2"),
   u8("status"),
   u8('roundNumber'),
+  array(u8(), 128, 'padding'),
 ]);
 
 export interface Battle {
-  date: String;
+  schema_version: number,
+  date: string;
   updateAuthority: PublicKey;
   player_1: Player;
   player_2: Player;
@@ -365,13 +397,17 @@ export interface Battle {
 }
 
 // eslint-disable-next-line no-control-regex
-const METADATA_REPLACE = new RegExp('\u0000', '');
+const METADATA_REPLACE = new RegExp('\u0000', 'g');
 
 export function decodeMetadata(buffer: Buffer): Metadata {
   const metadata: any = METADATA_LAYOUT.decode(buffer);
   metadata.updateAuthority = metadata.updateAuthority.toString();
   metadata.playerAuthority = metadata.playerAuthority.toString();
   metadata.battleAuthority = metadata.battleAuthority.toString();
+  for (let i = 0; i < metadata.moves.length; i++) {
+    metadata.moves[i].move_name = metadata.moves[i].move_name.replace(METADATA_REPLACE, '');
+  }
+  metadata.padding = [];
   return metadata;
 };
 
@@ -381,16 +417,9 @@ const BATTLE_REPLACE = new RegExp('\u0000', 'g');
 export function decodeBattle(buffer: Buffer): Battle {
   const battle: Battle = BATTLE_LAYOUT.decode(buffer);
   battle.date = battle.date.replace(BATTLE_REPLACE, '');
-  // battle.updateAuthority = battle.updateAuthority;
-  // battle.player1.wallet = battle.player1.wallet;
-  // battle.player1.teamMember0 = battle.player1.teamMember0;
-  // battle.player1.teamMember1 = battle.player1.teamMember1;
-  // battle.player1.teamMember2 = battle.player1.teamMember2;
-  // battle.player2.wallet = battle.player2.wallet;
-  // battle.player2.teamMember0 = battle.player2.teamMember0;
-  // battle.player2.teamMember1 = battle.player2.teamMember1;
-  // battle.player2.teamMember2 = battle.player2.teamMember2;
   battle.date = battle.date.replace(BATTLE_REPLACE, '');
+  battle.player_1.current_move.move_name = battle.player_1.current_move.move_name.replace(BATTLE_REPLACE, '');
+  battle.player_2.current_move.move_name = battle.player_2.current_move.move_name.replace(BATTLE_REPLACE, '');
   return battle;
 };
 
@@ -417,6 +446,19 @@ export const extendBorsh = () => {
   ) {
     const writer = this as unknown as BinaryWriter;
     writer.writeFixedArray(base58.decode(value));
+  };
+
+  (BinaryReader.prototype as any).readFloat32 = function () {
+    const reader = this as unknown as BinaryReader;
+    const array = reader.readFixedArray(4);
+    return convertBinaryToFloat32(array) as Float32;
+  };
+
+  (BinaryWriter.prototype as any).writeFloat32 = function (
+    value: Float32,
+  ) {
+    const writer = this as unknown as BinaryWriter;
+    writer.writeFixedArray(convertFloat32ToBinary(value));
   };
 };
 

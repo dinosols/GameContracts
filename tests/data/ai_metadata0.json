@@ -1,0 +1,53 @@
+{
+    "name": "Ultimus (CPU)",
+    "symbol": "",
+    "description": "",
+    "seller_fee_basis_points": 100,
+    "image": "https://raw.githubusercontent.com/dinosols/GameContracts/main/tests/data/ai_player0.png",
+    "attributes": [
+        {
+            "trait_type": "skin color",
+            "value": "gold"
+        },
+        {
+            "trait_type": "mouth",
+            "value": "diamond"
+        },
+        {
+            "trait_type": "neck",
+            "value": "solana chain"
+        },
+        {
+            "trait_type": "skin",
+            "value": "solana tattoo"
+        },
+        {
+            "trait_type": "nose",
+            "value": "smoke"
+        },
+        {
+            "trait_type": "eyes",
+            "value": "vipers"
+        },
+        {
+            "trait_type": "horns",
+            "value": "diamond"
+        }
+    ],
+    "external_url": "https://dinosols.app",
+    "properties": {
+        "category": "image",
+        "files": [
+            {
+                "type": "image/png",
+                "uri": "https://raw.githubusercontent.com/dinosols/GameContracts/main/tests/data/ai_player0.png"
+            }
+        ],
+        "creators": [
+            {
+                "address": "3HxqsUguP6E7CNqjvpEAnJ8v86qbyJgWvN2idAKygLdD",
+                "share": 100
+            }
+        ]
+    }
+}

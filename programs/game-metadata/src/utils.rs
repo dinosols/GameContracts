@@ -1,17 +1,21 @@
-
 use {
     crate::{
         error::GameMetadataError,
         state::{
-            Stats, Move, PREFIX, GameMetadata, MAX_GAME_METADATA_LEN,
+            GameMetadata,
+            Move,
+            Stats,
+            MAX_GAME_METADATA_LEN,
+            MAX_NAME_LENGTH,
             //get_reservation_list, Data, EditionMarker, Key, MasterEditionV1, Metadata, EDITION,
             //EDITION_MARKER_BIT_SIZE, MAX_CREATOR_LIMIT, MAX_EDITION_LEN, MAX_EDITION_MARKER_SIZE,
             //MAX_MASTER_EDITION_LEN, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH,
             //MAX_URI_LENGTH, PREFIX,
+            PREFIX,
         },
     },
-    arrayref::{/*array_mut_ref, */array_ref, array_refs/*, mut_array_refs*/},
-    borsh::{/*BorshDeserialize, */BorshSerialize},
+    arrayref::{/*array_mut_ref, */ array_ref, array_refs /*, mut_array_refs*/},
+    borsh::BorshSerialize,
     solana_program::{
         account_info::AccountInfo,
         //borsh::try_from_slice_unchecked,
@@ -26,8 +30,8 @@ use {
         sysvar::{rent::Rent, Sysvar},
     },
     //spl_token::{
-        //instruction::{set_authority, AuthorityType},
-        //state::{Account, Mint},
+    //instruction::{set_authority, AuthorityType},
+    //state::{Account, Mint},
     //},
     std::convert::TryInto,
 };
@@ -38,11 +42,8 @@ pub fn assert_data_valid(
     _existing_metadata: &GameMetadata,
     _update_authority_is_signer: bool,
 ) -> ProgramResult {
-
-
     Ok(())
 }
-
 
 pub struct CreateGameMetadataAccountsLogicArgs<'a> {
     pub metadata_account_info: &'a AccountInfo<'a>,
@@ -70,10 +71,7 @@ pub fn process_create_game_metadata_accounts_logic(
     base_stats: Stats,
     level_stats: Stats,
     curr_stats: Stats,
-    move0: Move,
-    move1: Move,
-    move2: Move,
-    move3: Move,
+    moves: Vec<Move>,
 ) -> ProgramResult {
     let CreateGameMetadataAccountsLogicArgs {
         metadata_account_info,
@@ -120,20 +118,18 @@ pub fn process_create_game_metadata_accounts_logic(
 
     let mut metadata = GameMetadata::from_account_info(metadata_account_info)?;
     assert_data_valid(
-       //&data,
-       update_authority_info.key,
-       &metadata,
-       update_authority_info.is_signer,
+        //&data,
+        update_authority_info.key,
+        &metadata,
+        update_authority_info.is_signer,
     )?;
 
+    metadata.schema_version = 1;
     metadata.player_authority = *player_authority_info.key;
     metadata.base_stats = base_stats;
     metadata.level_stats = level_stats;
     metadata.curr_stats = curr_stats;
-    metadata.move0 = move0;
-    metadata.move1 = move1;
-    metadata.move2 = move2;
-    metadata.move3 = move3;
+    metadata.moves = moves;
     metadata.update_authority = *update_authority_info.key;
 
     match _battle_authority_info {
@@ -141,11 +137,31 @@ pub fn process_create_game_metadata_accounts_logic(
         None => metadata.battle_authority = Pubkey::default(),
     }
 
-    //puff_out_data_fields(&mut metadata);
+    puff_out_data_fields(&mut metadata);
 
     metadata.serialize(&mut *metadata_account_info.data.borrow_mut())?;
 
     Ok(())
+}
+
+/// Strings need to be appended with `\0`s in order to have a deterministic length.
+/// This supports the `memcmp` filter  on get program account calls.
+/// NOTE: it is assumed that the metadata fields are never larger than the respective MAX_LENGTH
+pub fn puff_out_data_fields(metadata: &mut GameMetadata) {
+    for i in 0..metadata.moves.len() {
+        metadata.moves[i].move_name = puffed_out_string(&metadata.moves[i].move_name, MAX_NAME_LENGTH);
+    }
+}
+
+/// Pads the string to the desired size with `0u8`s.
+/// NOTE: it is assumed that the string's size is never larger than the given size.
+pub fn puffed_out_string(s: &String, size: usize) -> String {
+    let mut array_of_zeroes = vec![];
+    let puff_amount = size - s.len();
+    while array_of_zeroes.len() < puff_amount {
+        array_of_zeroes.push(0u8);
+    }
+    s.clone() + std::str::from_utf8(&array_of_zeroes).unwrap()
 }
 
 // pub fn try_from_slice_checked<T: BorshDeserialize>(

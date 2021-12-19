@@ -48,7 +48,7 @@ describe('game-metadata', () => {
 
     it('Mint Token', async () => {
         // Allocate memory for the account
-        mint = await mintToken(provider, provider.wallet.publicKey);
+        mint = await mintToken(provider, provider.wallet.payer);
     });
 
     it('Create Game Metadata', async () => {
@@ -58,53 +58,61 @@ describe('game-metadata', () => {
         const metadataAccount = await getMetadataPDA(mint.publicKey, program.programId);
 
         const baseStats = new Stats({
-            health: 2,
-            attack: 3,
-            defense: 4,
-            speed: 5,
-            agility: 6,
+            health: -3.031648825209398712132724540424533188343048095703125E-13,
+            attack: -3.031648825209398712132724540424533188343048095703125E-13,
+            defense: -3.031648825209398712132724540424533188343048095703125E-13,
+            speed: -3.031648825209398712132724540424533188343048095703125E-13,
+            agility: -3.031648825209398712132724540424533188343048095703125E-13,
+            rage_points: -3.031648825209398712132724540424533188343048095703125E-13,
         });
 
         const levelStats = new Stats({
-            health: 2,
-            attack: 3,
-            defense: 4,
-            speed: 5,
-            agility: 6,
+            health: -0.0057291663251817226409912109375,
+            attack: -0.0057291663251817226409912109375,
+            defense: -0.0057291663251817226409912109375,
+            speed: -0.0057291663251817226409912109375,
+            agility: -0.0057291663251817226409912109375,
+            rage_points: -0.0057291663251817226409912109375,
         });
 
         const currStats = new Stats({
-            health: 2,
-            attack: 3,
-            defense: 4,
-            speed: 5,
-            agility: 6,
+            health: -107374176,
+            attack: -107374176,
+            defense: -107374176,
+            speed: -107374176,
+            agility: -107374176,
+            rage_points: -107374176,
         });
 
-        const move0 = new Move({
-            move_id: 2,
-            damage_modifier: 1,
+        const moves = [];
+        moves.push(new Move({
+            move_name: "Bite",
+            stats_modifier: new Stats({ health: 0, attack: 1, defense: 2, speed: 4, agility: 5, rage_points: 6 }),
+            move_speed: 2,
+            status_effect: 1,
             status_effect_chance: 2,
-            status_effect: 2,
-        });
-        const move1 = new Move({
-            move_id: 1,
-            damage_modifier: 2,
-            status_effect_chance: 3,
+        }));
+        moves.push(new Move({
+            move_name: "Stomp",
+            stats_modifier: new Stats({ health: 0, attack: 1, defense: 2, speed: 4, agility: 5, rage_points: 6 }),
+            move_speed: 2,
             status_effect: 1,
-        });
-        const move2 = new Move({
-            move_id: 2,
-            damage_modifier: 3,
-            status_effect_chance: 4,
-            status_effect: 2,
-        });
-        const move3 = new Move({
-            move_id: 3,
-            damage_modifier: 4,
-            status_effect_chance: 5,
+            status_effect_chance: 2,
+        }));
+        moves.push(new Move({
+            move_name: "",
+            stats_modifier: new Stats({ health: 0, attack: 1, defense: 2, speed: 4, agility: 5, rage_points: 6 }),
+            move_speed: 2,
             status_effect: 1,
-        });
+            status_effect_chance: 2,
+        }));
+        moves.push(new Move({
+            move_name: "",
+            stats_modifier: new Stats({ health: 0, attack: 1, defense: 2, speed: 4, agility: 5, rage_points: 6 }),
+            move_speed: 2,
+            status_effect: 1,
+            status_effect_chance: 2,
+        }));
 
         const gameMetadataArgs =
             new CreateGameMetadataArgs({
@@ -113,10 +121,8 @@ describe('game-metadata', () => {
                 baseStats: baseStats,
                 levelStats: levelStats,
                 currStats: currStats,
-                move0: move0,
-                move1: move1,
-                move2: move2,
-                move3: move3
+                status_effect: 0,
+                moves: [...moves],
             });
 
         let txnData = Buffer.from(
@@ -125,6 +131,9 @@ describe('game-metadata', () => {
                 gameMetadataArgs,
             ),
         );
+
+        //console.log(gameMetadataArgs);
+        //console.log(JSON.stringify(txnData));
 
         instructions.push(
             createGameMetadataInstruction(
@@ -163,10 +172,9 @@ describe('game-metadata', () => {
         assert.ok(Object.entries(metadata.baseStats).toString() === Object.entries(baseStats).toString());
         assert.ok(Object.entries(metadata.levelStats).toString() === Object.entries(levelStats).toString());
         assert.ok(Object.entries(metadata.currStats).toString() === Object.entries(currStats).toString());
-        assert.ok(Object.entries(metadata.move0).toString() === Object.entries(move0).toString());
-        assert.ok(Object.entries(metadata.move1).toString() === Object.entries(move1).toString());
-        assert.ok(Object.entries(metadata.move2).toString() === Object.entries(move2).toString());
-        assert.ok(Object.entries(metadata.move3).toString() === Object.entries(move3).toString());
+        for (let i = 0; i < metadata.moves.length; i++) {
+            assert.ok(Object.entries(metadata.moves[i]).toString() === Object.entries(moves[i]).toString());
+        }
     });
 
     it('Update Game Metadata', async () => {

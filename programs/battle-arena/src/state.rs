@@ -6,22 +6,19 @@ use {
         pubkey::Pubkey,
         borsh::try_from_slice_unchecked,
     },
+    crate::utils::puffed_out_string,
+    game_metadata::state::{
+        MAX_MOVE_SIZE,
+        Move,
+    }
 };
 
 // TODO: Remove copy of structs from GameMetadata crate
 
 /// Prefix used in PDA derivations to avoid collisions with other programs.
-pub const PREFIX: &str = "battle";
+pub const PREFIX: &str = "battlev1";
 
 pub const MAX_DATE_LENGTH: usize = 24;
-
-//pub const MAX_MOVES: usize = 4;
-pub const MAX_MOVE_SIZE: usize =
-    4 + //pub move_id: MoveID,
-    1 + //pub damageMod: u8,
-    1 + //pub statusEffChance: u8,
-    4 + //pub statusEff: StatusEffect,
-    2;  //padding
 
 pub const MAX_PLAYER_SIZE: usize =
     32 +                        //pub wallet: Pubkey,
@@ -34,13 +31,15 @@ pub const MAX_PLAYER_SIZE: usize =
 
 
 pub const MAX_BATTLE_LEN: usize = 
+    4 +                         //pub schema_version: u32
     MAX_DATE_LENGTH +           //pub date: String::with_capacity(24),
     32 +                        //pub update_authority: Pubkey,
     MAX_PLAYER_SIZE +           //pub player1: Player
     MAX_PLAYER_SIZE +           //pub player2: Player
     4 +                         //pub status: Status,
     1 +                         //pub round_number: u8,
-    3;                          //padding
+    3 +                         //padding
+    128;                        //padding
 
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Copy)]
@@ -78,59 +77,16 @@ impl Default for Player {
 }
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Copy)]
-pub enum StatusEffect {
-    None,
-    Irradiated,
-    Poisoned,
-}
-
-#[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Copy)]
-pub enum MoveID {
-    None,
-    // Raptor
-    Slash,
-    BiteRaptor,
-    PackHunt,
-    // T. rex
-    BiteTrex,
-    Crush,
-    GroupTear, 
-    // Pterodactyl
-    Claw,
-    Drop,
-    Swarm ,
-    // Triceratops
-    Stab,
-    Charge,
-    HerdDefense,
-    // All
-    Laser,
-}
-
-#[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Copy, Clone)]
-pub struct Move {
-    pub move_id: MoveID,
-    pub damage_modifier: u8,
-    pub status_effect_chance: u8,
-    pub status_effect: StatusEffect,
-}
-
-impl Default for Move {
-    fn default() -> Self {Move{move_id: MoveID::None, damage_modifier: 1, status_effect_chance: 0, status_effect: StatusEffect::None}}
-}
-
-#[repr(C)]
 #[derive(Clone, BorshSerialize, BorshDeserialize, Debug)]
 pub struct Battle {
+    pub schema_version: u32,
     pub date: String,
     pub update_authority: Pubkey,
     pub player_1: Player,
     pub player_2: Player,
     pub status: Status,
-    pub round_number: u8
+    pub round_number: u8,
+    pub padding: [u8; 128]
 }
 
 impl Battle {

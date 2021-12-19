@@ -1,37 +1,37 @@
 {
-    "name": "AI Test Dinosol",
+    "name": "Retaliator (CPU)",
     "symbol": "",
     "description": "",
     "seller_fee_basis_points": 100,
-    "image": "https://raw.githubusercontent.com/dinosols/GameContracts/main/tests/data/ai_player.png",
+    "image": "https://raw.githubusercontent.com/dinosols/GameContracts/main/tests/data/ai_player2.png",
     "attributes": [
         {
             "trait_type": "skin color",
-            "value": "gold"
+            "value": "gray & red"
         },
         {
             "trait_type": "mouth",
-            "value": "diamond"
+            "value": "none"
         },
         {
             "trait_type": "neck",
-            "value": "solana chain"
+            "value": "skinny tie"
         },
         {
             "trait_type": "skin",
-            "value": "solana tattoo"
+            "value": "none"
         },
         {
             "trait_type": "nose",
-            "value": "smoke"
+            "value": "none"
         },
         {
             "trait_type": "eyes",
-            "value": "vipers"
+            "value": "scar"
         },
         {
             "trait_type": "horns",
-            "value": "diamond"
+            "value": "none"
         }
     ],
     "external_url": "https://dinosols.app",
@@ -40,7 +40,7 @@
         "files": [
             {
                 "type": "image/png",
-                "uri": "https://raw.githubusercontent.com/dinosols/GameContracts/main/tests/data/ai_player.png"
+                "uri": "https://raw.githubusercontent.com/dinosols/GameContracts/main/tests/data/ai_player2.png"
             }
         ],
         "creators": [

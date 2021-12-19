@@ -54,6 +54,13 @@ describe('battle-arena', () => {
   // @ts-ignore
   let signers: anchor.web3.Keypair[]
 
+  const provider2 = new anchor.Provider(
+    provider.connection,
+    new anchor.Wallet(anchor.web3.Keypair.generate()),
+    { commitment: provider.connection.commitment }
+  );
+  const player2KeyPair = provider2.wallet.payer;
+
   let player1 = null;
   let player1Team: PublicKey[] = [];
   let player1TeamArgs: CreateGameMetadataArgs[] = [];
@@ -66,10 +73,16 @@ describe('battle-arena', () => {
   it('Create Players', async () => {
     let instructions: TransactionInstruction[] = [];
 
+    await provider.connection.confirmTransaction(
+      await provider.connection.requestAirdrop(player2KeyPair.publicKey, 10000000000),
+      "confirmed"
+    );
+
     player1 = provider.wallet.publicKey;
+    player2 = player2KeyPair.publicKey;
 
     // Create Player 1's Dinos
-    let p1dino0mint = await mintToken(provider, player1);
+    let p1dino0mint = await mintToken(provider, provider.wallet.payer);
     let p1dino0meta = await getMetadataPDA(p1dino0mint.publicKey, gameMetadataProgram.programId);
     let p1dino0args = await createRandomGameMetadataArgs();
     let p1dino0TxnData = Buffer.from(
@@ -92,7 +105,7 @@ describe('battle-arena', () => {
     );
 
 
-    let p1dino1mint = await mintToken(provider, player1);
+    let p1dino1mint = await mintToken(provider, provider.wallet.payer);
     let p1dino1meta = await getMetadataPDA(p1dino1mint.publicKey, gameMetadataProgram.programId);
     let p1dino1args = await createRandomGameMetadataArgs();
     let p1dino1TxnData = Buffer.from(
@@ -115,7 +128,7 @@ describe('battle-arena', () => {
     );
 
 
-    let p1dino2mint = await mintToken(provider, player1);
+    let p1dino2mint = await mintToken(provider, provider.wallet.payer);
     let p1dino2meta = await getMetadataPDA(p1dino2mint.publicKey, gameMetadataProgram.programId);
     let p1dino2args = await createRandomGameMetadataArgs();
     let p1dino2TxnData = Buffer.from(
@@ -159,10 +172,10 @@ describe('battle-arena', () => {
 
     // TODO: Hande this with an actual second wallet
     //player2 = anchor.web3.Keypair.generate();
-    player2 = provider.wallet.publicKey;
+    //player2 = provider.wallet.publicKey;
 
     // Create Player 2's Dinos
-    let p2dino0mint = await mintToken(provider, player2);
+    let p2dino0mint = await mintToken(provider, player2KeyPair);
     let p2dino0meta = await getMetadataPDA(p2dino0mint.publicKey, gameMetadataProgram.programId);
     let p2dino0args = await createRandomGameMetadataArgs();
     let p2dino0TxnData = Buffer.from(
@@ -185,7 +198,7 @@ describe('battle-arena', () => {
     );
 
 
-    let p2dino1mint = await mintToken(provider, player2);
+    let p2dino1mint = await mintToken(provider, player2KeyPair);
     let p2dino1meta = await getMetadataPDA(p2dino1mint.publicKey, gameMetadataProgram.programId);
     let p2dino1args = await createRandomGameMetadataArgs();
     let p2dino1TxnData = Buffer.from(
@@ -208,7 +221,7 @@ describe('battle-arena', () => {
     );
 
 
-    let p2dino2mint = await mintToken(provider, player2);
+    let p2dino2mint = await mintToken(provider, player2KeyPair);
     let p2dino2meta = await getMetadataPDA(p2dino2mint.publicKey, gameMetadataProgram.programId);
     let p2dino2args = await createRandomGameMetadataArgs();
     let p2dino2TxnData = Buffer.from(
@@ -232,9 +245,9 @@ describe('battle-arena', () => {
 
     const res1 = await sendTransactionWithRetryWithKeypair(
       provider.connection,
-      provider.wallet.payer,
+      player2KeyPair,
       instructions,
-      [provider.wallet.payer],
+      [player2KeyPair],
     );
 
     try {
@@ -277,7 +290,7 @@ describe('battle-arena', () => {
     var MM = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
     var YYYY = today.getFullYear();
 
-    const dateString: String = YYYY + "-" + MM + "-" + DD + " " +
+    const dateString: string = YYYY + "-" + MM + "-" + DD + " " +
       hh + ":" + mm + ":" + ss;
 
     battleAccount = await getBattlePDA(player1, program.programId, dateString);
@@ -394,11 +407,11 @@ describe('battle-arena', () => {
     instructions.push(
       joinBattleInstruction(
         battleAccount,
-        provider.wallet.publicKey,
+        player2,
         player2Team[0],
         player2Team[1],
         player2Team[2],
-        provider.wallet.publicKey,
+        player2,
         txnData,
         program.programId,
       ),
@@ -418,16 +431,18 @@ describe('battle-arena', () => {
       );
       instructions.push(
         enterBattleInstruction(
-          provider.wallet.publicKey,
+          player2,
           player2Team[i],
-          provider.wallet.publicKey,
+          player2,
           txnData,
           gameMetadataProgram.programId,
         ),
       );
     }
 
-    signers = [provider.wallet.payer];
+    signers = [provider.wallet.payer, player2KeyPair];
+
+    //console.log(JSON.stringify(instructions, null, 2));
 
     const res = await sendTransactionWithRetryWithKeypair(
       provider.connection,
@@ -448,12 +463,12 @@ describe('battle-arena', () => {
     for (let i = 0; i < 3; i++) {
       const gameMetadataInfo0 = await provider.connection.getAccountInfo(player1Team[i]);
       const gameMeta0 = decodeMetadata(gameMetadataInfo0.data);
-      console.log(gameMeta0);
+      //console.log(gameMeta0);
       assert.ok(gameMeta0.battleAuthority.toString() === battleAccount.toString());
 
       const gameMetadataInfo1 = await provider.connection.getAccountInfo(player2Team[i]);
       const gameMeta1 = decodeMetadata(gameMetadataInfo1.data);
-      console.log(gameMeta1);
+      //console.log(gameMeta1);
       assert.ok(gameMeta1.battleAuthority.toString() === battleAccount.toString());
     }
 
@@ -466,7 +481,9 @@ describe('battle-arena', () => {
     assert.ok(battle.player_1.team_member0.toString() === player1Team[0].toString());
     assert.ok(battle.player_1.team_member1.toString() === player1Team[1].toString());
     assert.ok(battle.player_1.team_member2.toString() === player1Team[2].toString());
-    assert.ok(battle.player_2.wallet.toString() === provider.wallet.publicKey.toString());
+    //console.log(battle.player_2.wallet.toString());
+    //console.log(provider.wallet.publicKey.toString());
+    assert.ok(battle.player_2.wallet.toString() === player2.toString());
     assert.ok(battle.player_2.team_member0.toString() === player2Team[0].toString());
     assert.ok(battle.player_2.team_member1.toString() === player2Team[1].toString());
     assert.ok(battle.player_2.team_member2.toString() === player2Team[2].toString());
@@ -500,7 +517,6 @@ describe('battle-arena', () => {
 
     // TODO: We're only using one wallet so there's no way to check which player
     // is sending this instruction. Don't overwrite.
-    /*
     const p2TeamMemberArgs =
       new ChooseTeamMemberArgs({
         index: 0,
@@ -516,15 +532,14 @@ describe('battle-arena', () => {
     instructions.push(
       chooseTeamMemberInstruction(
         battleAccount,
-        provider.wallet.publicKey,
-        provider.wallet.publicKey,
+        player2,
+        player2,
         p2TxnData,
         program.programId,
       ),
     );
-    */
 
-    signers = [provider.wallet.payer];
+    signers = [provider.wallet.payer, player2KeyPair];
 
     const res = await sendTransactionWithRetryWithKeypair(
       provider.connection,
@@ -571,7 +586,7 @@ describe('battle-arena', () => {
       // TODO: This doesn't work for now, CPI needs to be fixed.
       const p1MoveArgs =
         new SubmitActionArgs({
-          move: player1TeamArgs[0].move0,
+          move: player1TeamArgs[0].moves[0],
         });
 
       let p1MoveTxnData = Buffer.from(
@@ -595,122 +610,125 @@ describe('battle-arena', () => {
       );
 
       console.log("p1MoveArgs: " + JSON.stringify(p1MoveArgs));
-      console.log("p1MoveTxnData: " + JSON.stringify(p1MoveTxnData));
-      console.log("Instructions: " + JSON.stringify(instructions));
+      //console.log("p1MoveTxnData: " + JSON.stringify(p1MoveTxnData));
+      //console.log("Instructions: " + JSON.stringify(instructions));
 
       const p2MoveArgs =
         new SubmitActionArgs({
-          move: player2TeamArgs[0].move0,
+          move: player2TeamArgs[0].moves[0],
         });
-      /*
-          let p2TxnData = Buffer.from(
-            serialize(
-              BATTLE_SCHEMA,
-              p2MoveArgs,
-            ),
-          );
-      
-          instructions.push(
-            submitActionInstruction(
-              battleAccount,
-              provider.wallet.publicKey,
-              player2Team[0],
-              player1Team[1],
-              provider.wallet.publicKey,
-              p2TxnData,
-              program.programId,
-            ),
-          );
-          */
+
+      let p2TxnData = Buffer.from(
+        serialize(
+          BATTLE_SCHEMA,
+          p2MoveArgs,
+        ),
+      );
+
+      instructions.push(
+        submitActionInstruction(
+          battleAccount,
+          player2,
+          player2Team[0],
+          player1Team[1],
+          gameMetadataProgram.programId,
+          player2,
+          p2TxnData,
+          program.programId,
+        ),
+      );
+
+
+      console.log("p2MoveArgs: " + JSON.stringify(p2MoveArgs));
 
       p1TeamMemberAccountInfo = await provider.connection.getAccountInfo(player1Team[1]);
       p1TeamMember = decodeMetadata(p1TeamMemberAccountInfo.data);
       p2TeamMemberAccountInfo = await provider.connection.getAccountInfo(player2Team[0]);
       p2TeamMember = decodeMetadata(p2TeamMemberAccountInfo.data);
 
-      const p1_new_stats = new Stats({
-        health: Math.max(0, p1TeamMember.currStats.health - p2TeamMember.currStats.attack),
-        attack: p1TeamMember.currStats.attack,
-        defense: p1TeamMember.currStats.defense,
-        speed: p1TeamMember.currStats.speed,
-        agility: p1TeamMember.currStats.agility,
-      });
+      // const p1_new_stats = new Stats({
+      //   health: Math.max(0, p1TeamMember.currStats.health - p2TeamMember.currStats.attack),
+      //   attack: p1TeamMember.currStats.attack,
+      //   defense: p1TeamMember.currStats.defense,
+      //   speed: p1TeamMember.currStats.speed,
+      //   agility: p1TeamMember.currStats.agility,
+      // });
 
-      const p1StatsArgs =
-        new UpdateStatsArgs({
-          stats: p1_new_stats,
-        });
+      // const p1StatsArgs =
+      //   new UpdateStatsArgs({
+      //     stats: p1_new_stats,
+      //   });
 
-      let p1TxnData = Buffer.from(
-        serialize(
-          GAME_METADATA_SCHEMA,
-          p1StatsArgs,
-        ),
-      );
+      // let p1TxnData = Buffer.from(
+      //   serialize(
+      //     GAME_METADATA_SCHEMA,
+      //     p1StatsArgs,
+      //   ),
+      // );
 
-      instructions.push(
-        updateStatsInstruction(
-          player1Team[1],
-          provider.wallet.publicKey,
-          p1TxnData,
-          gameMetadataProgram.programId,
-        ),
-      );
+      // instructions.push(
+      //   updateStatsInstruction(
+      //     player1Team[1],
+      //     provider.wallet.publicKey,
+      //     p1TxnData,
+      //     gameMetadataProgram.programId,
+      //   ),
+      // );
 
-      const p2_new_stats = new Stats({
-        health: Math.max(0, p2TeamMember.currStats.health - p1TeamMember.currStats.attack),
-        attack: p2TeamMember.currStats.attack,
-        defense: p2TeamMember.currStats.defense,
-        speed: p2TeamMember.currStats.speed,
-        agility: p2TeamMember.currStats.agility,
-      });
+      // const p2_new_stats = new Stats({
+      //   health: Math.max(0, p2TeamMember.currStats.health - p1TeamMember.currStats.attack),
+      //   attack: p2TeamMember.currStats.attack,
+      //   defense: p2TeamMember.currStats.defense,
+      //   speed: p2TeamMember.currStats.speed,
+      //   agility: p2TeamMember.currStats.agility,
+      // });
 
-      const p2StatsArgs =
-        new UpdateStatsArgs({
-          stats: p2_new_stats,
-        });
+      // const p2StatsArgs =
+      //   new UpdateStatsArgs({
+      //     stats: p2_new_stats,
+      //   });
 
-      let p2TxnData = Buffer.from(
-        serialize(
-          GAME_METADATA_SCHEMA,
-          p2StatsArgs,
-        ),
-      );
+      // let p2TxnData = Buffer.from(
+      //   serialize(
+      //     GAME_METADATA_SCHEMA,
+      //     p2StatsArgs,
+      //   ),
+      // );
 
-      instructions.push(
-        updateStatsInstruction(
-          player2Team[0],
-          provider.wallet.publicKey,
-          p2TxnData,
-          gameMetadataProgram.programId,
-        ),
-      );
+      // instructions.push(
+      //   updateStatsInstruction(
+      //     player2Team[0],
+      //     provider.wallet.publicKey,
+      //     p2TxnData,
+      //     gameMetadataProgram.programId,
+      //   ),
+      // );
 
-      let updateArgs =
-        new UpdateArgs({});
-      let updateTxnData = Buffer.from(
-        serialize(
-          BATTLE_SCHEMA,
-          updateArgs,
-        )
-      );
+      // let updateArgs =
+      //   new UpdateArgs({});
+      // let updateTxnData = Buffer.from(
+      //   serialize(
+      //     BATTLE_SCHEMA,
+      //     updateArgs,
+      //   )
+      // );
 
-      console.log("Got here")
-      instructions.push(
-        updateInstruction(
-          battleAccount,
-          player1Team[1],
-          player2Team[0],
-          provider.wallet.publicKey,
-          updateTxnData,
-          program.programId,
-        ),
-      );
-      console.log("Also got here");
-      console.log(instructions);
-      console.log(provider.wallet.publicKey);
+      // //console.log("Got here")
+      // instructions.push(
+      //   updateInstruction(
+      //     battleAccount,
+      //     player1Team[1],
+      //     player2Team[0],
+      //     provider.wallet.publicKey,
+      //     updateTxnData,
+      //     program.programId,
+      //   ),
+      // );
+      //console.log("Also got here");
+      //console.log(instructions);
+      //console.log(provider.wallet.publicKey);
 
-      signers = [provider.wallet.payer];
+      signers = [provider.wallet.payer, player2KeyPair];
 
       const res = await sendTransactionWithRetryWithKeypair(
         provider.connection,
@@ -730,14 +748,17 @@ describe('battle-arena', () => {
 
       battleAccountInfo = await provider.connection.getAccountInfo(battleAccount);
       battle = decodeBattle(battleAccountInfo.data);
+      console.log(battle);
 
       p1TeamMember_prev = p1TeamMember;
       p1TeamMemberAccountInfo = await provider.connection.getAccountInfo(player1Team[1]);
       p1TeamMember = decodeMetadata(p1TeamMemberAccountInfo.data);
+      console.log(p1TeamMember);
 
       p2TeamMember_prev = p2TeamMember;
       p2TeamMemberAccountInfo = await provider.connection.getAccountInfo(player2Team[0]);
       p2TeamMember = decodeMetadata(p2TeamMemberAccountInfo.data);
+      console.log(p2TeamMember);
 
       let p1Health = p1TeamMember.currStats.health;
       let p1Health_prev = p1TeamMember_prev.currStats.health;

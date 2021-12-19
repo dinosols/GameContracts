@@ -1,6 +1,10 @@
 use {
     crate::{
-        state::{/*Creator, */Stats, Move,/*, EDITION, EDITION_MARKER_BIT_SIZE, PREFIX*/},
+        state::{
+            Stats,
+            Move,
+            StatusEffect,
+        },
     },
     borsh::{BorshDeserialize, BorshSerialize},
     solana_program::{
@@ -21,10 +25,8 @@ pub struct CreateMetadataAccountArgs {
     pub base_stats: Stats,
     pub level_stats: Stats,
     pub curr_stats: Stats,
-    pub move0: Move,
-    pub move1: Move,
-    pub move2: Move,
-    pub move3: Move,
+    pub status_effect: StatusEffect,
+    pub moves: Vec<Move>,
 }
 
 #[repr(C)]
@@ -36,10 +38,8 @@ pub struct UpdateMetadataAccountArgs {
     pub base_stats: Stats,
     pub level_stats: Stats,
     pub curr_stats: Stats,
-    pub move0: Move,
-    pub move1: Move,
-    pub move2: Move,
-    pub move3: Move,
+    pub status_effect: StatusEffect,
+    pub moves: Vec<Move>,
 }
 
 #[repr(C)]

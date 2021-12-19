@@ -1,9 +1,9 @@
 {
-    "name": "Test Dinosol",
+    "name": "ChickenTribe #692",
     "symbol": "",
     "description": "",
     "seller_fee_basis_points": 100,
-    "image": "https://dinosols.app/images/Dew.png",
+    "image": "https://www.arweave.net/bhA-lHLZxfnoiz35LA2tIEQjV8zUfULBgicTwU2dgp4?ext=png",
     "attributes": [
         {
             "trait_type": "eyes",
@@ -28,7 +28,7 @@
         "files": [
             {
                 "type": "image/png",
-                "uri": "https://dinosols.app/images/Dew.png"
+                "uri": "https://www.arweave.net/bhA-lHLZxfnoiz35LA2tIEQjV8zUfULBgicTwU2dgp4?ext=png"
             }
         ],
         "creators": [

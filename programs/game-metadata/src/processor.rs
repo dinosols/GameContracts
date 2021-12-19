@@ -2,8 +2,9 @@ use {
     crate::{
         //error::GameMetadataError,
         instruction::GameMetadataInstruction,
+        instruction::CreateMetadataAccountArgs,
         state::{
-            Stats, Move, GameMetadata,
+            Stats, Move, GameMetadata, StatusEffect,
         },
         utils::{
         //    assert_data_valid, assert_derivation, assert_initialized,
@@ -46,10 +47,7 @@ pub fn process_instruction<'a>(
                 args.base_stats,
                 args.level_stats,
                 args.curr_stats,
-                args.move0,
-                args.move1,
-                args.move2,
-                args.move3,
+                args.moves,
             )
         }
 
@@ -97,10 +95,7 @@ pub fn process_create_metadata_accounts<'a>(
     base_stats: Stats,
     level_stats: Stats,
     curr_stats: Stats,
-    move0: Move,
-    move1: Move,
-    move2: Move,
-    move3: Move,
+    moves: Vec<Move>,
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
     let metadata_account_info = next_account_info(account_info_iter)?;
@@ -127,10 +122,7 @@ pub fn process_create_metadata_accounts<'a>(
         base_stats,
         level_stats,
         curr_stats,
-        move0,
-        move1,
-        move2,
-        move3,
+        moves,
     )
 }
 

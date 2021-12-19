@@ -1,13 +1,13 @@
 use {
-    crate::{
-        state::{Move},
-    },
     borsh::{BorshDeserialize, BorshSerialize},
     //solana_program::{
         //instruction::{AccountMeta, Instruction},
         //pubkey::Pubkey,
         //sysvar,
     //},
+    game_metadata::state::{
+        Move,
+    }
 };
 
 #[repr(C)]

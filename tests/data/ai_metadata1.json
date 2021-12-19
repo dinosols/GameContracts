@@ -1,0 +1,53 @@
+{
+    "name": "Destructicus (CPU)",
+    "symbol": "",
+    "description": "",
+    "seller_fee_basis_points": 100,
+    "image": "https://raw.githubusercontent.com/dinosols/GameContracts/main/tests/data/ai_player1.png",
+    "attributes": [
+        {
+            "trait_type": "skin color",
+            "value": "purple"
+        },
+        {
+            "trait_type": "mouth",
+            "value": "steel"
+        },
+        {
+            "trait_type": "neck",
+            "value": "bandana"
+        },
+        {
+            "trait_type": "skin",
+            "value": "none"
+        },
+        {
+            "trait_type": "nose",
+            "value": "none"
+        },
+        {
+            "trait_type": "eyes",
+            "value": "none"
+        },
+        {
+            "trait_type": "horns",
+            "value": "bloody"
+        }
+    ],
+    "external_url": "https://dinosols.app",
+    "properties": {
+        "category": "image",
+        "files": [
+            {
+                "type": "image/png",
+                "uri": "https://raw.githubusercontent.com/dinosols/GameContracts/main/tests/data/ai_player1.png"
+            }
+        ],
+        "creators": [
+            {
+                "address": "3HxqsUguP6E7CNqjvpEAnJ8v86qbyJgWvN2idAKygLdD",
+                "share": 100
+            }
+        ]
+    }
+}

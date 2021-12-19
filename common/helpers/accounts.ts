@@ -47,7 +47,7 @@ export const getMetadataPDA = async (
   return (
     await anchor.web3.PublicKey.findProgramAddress(
       [
-        Buffer.from('gamemeta'),
+        Buffer.from('gamemetav1'),
         token_game_metadata_program_id.toBuffer(),
         mint.toBuffer(),
       ],
@@ -64,7 +64,7 @@ export const getBattlePDA = async (
   return (
     await anchor.web3.PublicKey.findProgramAddress(
       [
-        Buffer.from('battle'),
+        Buffer.from('battlev1'),
         battle_program_id.toBuffer(),
         player.toBuffer(),
         Buffer.from(dateString),
@@ -75,73 +75,73 @@ export const getBattlePDA = async (
 };
 
 // @ts-ignore
-export async function mintToken(provider: anchor.Provider, mintOwner: PublicKey) {
+export async function mintToken(provider: anchor.Provider, mintOwner: anchor.web3.Keypair) {
   let instructions: TransactionInstruction[] = [];
   // @ts-ignore
   var signers: anchor.web3.Keypair[];
 
   const mintRent = await provider.connection.getMinimumBalanceForRentExemption(
-      MintLayout.span
+    MintLayout.span
   );
-  
+
   // Generate a mint
   let mint = anchor.web3.Keypair.generate();
 
   instructions.push(
-      SystemProgram.createAccount({
-          fromPubkey: mintOwner,
-          newAccountPubkey: mint.publicKey,
-          lamports: mintRent,
-          space: MintLayout.span,
-          programId: TOKEN_PROGRAM_ID,
-      })
+    SystemProgram.createAccount({
+      fromPubkey: mintOwner.publicKey,
+      newAccountPubkey: mint.publicKey,
+      lamports: mintRent,
+      space: MintLayout.span,
+      programId: TOKEN_PROGRAM_ID,
+    })
   );
   instructions.push(
-      Token.createInitMintInstruction(
-          TOKEN_PROGRAM_ID,
-          mint.publicKey,
-          0,
-          mintOwner,
-          mintOwner
-      )
+    Token.createInitMintInstruction(
+      TOKEN_PROGRAM_ID,
+      mint.publicKey,
+      0,
+      mintOwner.publicKey,
+      mintOwner.publicKey
+    )
   );
 
   let userTokenAccountAddress = await getTokenWallet(
-      mintOwner,
-      mint.publicKey
+    mintOwner.publicKey,
+    mint.publicKey
   );
   instructions.push(
-      createAssociatedTokenAccountInstruction(
-          userTokenAccountAddress,
-          mintOwner,
-          mintOwner,
-          mint.publicKey
-      )
+    createAssociatedTokenAccountInstruction(
+      userTokenAccountAddress,
+      mintOwner.publicKey,
+      mintOwner.publicKey,
+      mint.publicKey
+    )
   );
 
   instructions.push(
-      Token.createMintToInstruction(
-          TOKEN_PROGRAM_ID,
-          mint.publicKey,
-          userTokenAccountAddress,
-          mintOwner,
-          [],
-          1,
-      ),
+    Token.createMintToInstruction(
+      TOKEN_PROGRAM_ID,
+      mint.publicKey,
+      userTokenAccountAddress,
+      mintOwner.publicKey,
+      [],
+      1,
+    ),
   );
 
   const res = await sendTransactionWithRetryWithKeypair(
-      provider.connection,
-      // @ts-ignore
-      provider.wallet.payer,
-      instructions,
-      [mint],
+    provider.connection,
+    // @ts-ignore
+    mintOwner,
+    instructions,
+    [mint],
   );
 
   try {
-      await provider.connection.confirmTransaction(res.txid, 'max');
+    await provider.connection.confirmTransaction(res.txid, 'max');
   } catch {
-      // ignore
+    // ignore
   }
 
   // Force wait for max confirmations
@@ -153,6 +153,11 @@ function getRandomInt(max) {
   return Math.floor(Math.random() * max);
 }
 
+function random_choice(choices) {
+  var index = Math.floor(Math.random() * choices.length);
+  return choices[index];
+}
+
 export const createRandomGameMetadataArgs = async () => {
   const baseStats = new Stats({
     health: getRandomInt(10) + 1,
@@ -160,33 +165,68 @@ export const createRandomGameMetadataArgs = async () => {
     defense: getRandomInt(5) + 1,
     speed: getRandomInt(5) + 1,
     agility: getRandomInt(5) + 1,
+    rage_points: getRandomInt(5),
   });
   const levelStats = new Stats(JSON.parse(JSON.stringify(baseStats)));
   const currStats = new Stats(JSON.parse(JSON.stringify(baseStats)));
 
+  const moves = ["", "Bite", "Stab", "Charge"];
+
   const move0 = new Move({
-    move_id: getRandomInt(13) + 1,
-    damage_modifier: getRandomInt(5),
-    status_effect_chance: getRandomInt(10),
+    move_name: "Bite",
+    stats_modifier: new Stats({
+      health: getRandomInt(10) + 1,
+      attack: getRandomInt(5) + 1,
+      defense: getRandomInt(5) + 1,
+      speed: getRandomInt(5) + 1,
+      agility: getRandomInt(5) + 1,
+      rage_points: getRandomInt(5),
+    }),
+    move_speed: getRandomInt(10),
     status_effect: getRandomInt(3),
+    status_effect_chance: getRandomInt(10),
   });
   const move1 = new Move({
-    move_id: getRandomInt(14),
-    damage_modifier: getRandomInt(5),
-    status_effect_chance: getRandomInt(10),
+    move_name: random_choice(moves),
+    stats_modifier: new Stats({
+      health: getRandomInt(10) + 1,
+      attack: getRandomInt(5) + 1,
+      defense: getRandomInt(5) + 1,
+      speed: getRandomInt(5) + 1,
+      agility: getRandomInt(5) + 1,
+      rage_points: getRandomInt(5),
+    }),
+    move_speed: getRandomInt(10),
     status_effect: getRandomInt(3),
+    status_effect_chance: getRandomInt(10),
   });
   const move2 = new Move({
-    move_id: getRandomInt(14),
-    damage_modifier: getRandomInt(5),
-    status_effect_chance: getRandomInt(10),
+    move_name: random_choice(moves),
+    stats_modifier: new Stats({
+      health: getRandomInt(10) + 1,
+      attack: getRandomInt(5) + 1,
+      defense: getRandomInt(5) + 1,
+      speed: getRandomInt(5) + 1,
+      agility: getRandomInt(5) + 1,
+      rage_points: getRandomInt(5),
+    }),
+    move_speed: getRandomInt(10),
     status_effect: getRandomInt(3),
+    status_effect_chance: getRandomInt(10),
   });
   const move3 = new Move({
-    move_id: getRandomInt(14),
-    damage_modifier: getRandomInt(5),
-    status_effect_chance: getRandomInt(10),
+    move_name: random_choice(moves),
+    stats_modifier: new Stats({
+      health: getRandomInt(10) + 1,
+      attack: getRandomInt(5) + 1,
+      defense: getRandomInt(5) + 1,
+      speed: getRandomInt(5) + 1,
+      agility: getRandomInt(5) + 1,
+      rage_points: getRandomInt(5),
+    }),
+    move_speed: getRandomInt(10),
     status_effect: getRandomInt(3),
+    status_effect_chance: getRandomInt(10),
   });
 
   const gameMetadataArgs =
@@ -196,11 +236,185 @@ export const createRandomGameMetadataArgs = async () => {
       baseStats: baseStats,
       levelStats: levelStats,
       currStats: currStats,
-      move0: move0,
-      move1: move1,
-      move2: move2,
-      move3: move3
+      status_effect: 0,
+      moves: [move0, move1, move2, move3],
     });
 
-    return gameMetadataArgs;
+  return gameMetadataArgs;
+}
+
+export const createGameMetadataArgsFromJSON = async (json, species) => {
+  const baseStats = new Stats({
+    health: json["health"],
+    attack: json["attack"],
+    defense: json["defense"],
+    speed: json["speed"],
+    agility: json["agility"],
+    rage_points: json["rage_points"],
+  });
+  const levelStats = new Stats(JSON.parse(JSON.stringify(baseStats)));
+  const currStats = new Stats(JSON.parse(JSON.stringify(baseStats)));
+
+  let move0, move1;
+  if (species === "Pterodactyl") {
+    move0 = new Move({
+      move_name: "Scratch",
+      stats_modifier: new Stats({
+        health: 1,
+        attack: 0.5,
+        defense: 1,
+        speed: 1,
+        agility: 1,
+        rage_points: 0,
+      }),
+      move_speed: 1,
+      status_effect: 0,
+      status_effect_chance: 100,
+    });
+    move1 = new Move({
+      move_name: "Dodge",
+      stats_modifier: new Stats({
+        health: 1,
+        attack: 0,
+        defense: 1,
+        speed: 1,
+        agility: 2,
+        rage_points: 0,
+      }),
+      move_speed: 2,
+      status_effect: 0,
+      status_effect_chance: 100,
+    });
+  }
+  else if (species === "Triceratops") {
+    move0 = new Move({
+      move_name: "Stab",
+      stats_modifier: new Stats({
+        health: 1,
+        attack: 0.5,
+        defense: 1,
+        speed: 1,
+        agility: 1,
+        rage_points: 0,
+      }),
+      move_speed: 1,
+      status_effect: 0,
+      status_effect_chance: 100,
+    });
+    move1 = new Move({
+      move_name: "Block",
+      stats_modifier: new Stats({
+        health: 1,
+        attack: 0,
+        defense: 2,
+        speed: 1,
+        agility: 1,
+        rage_points: 0,
+      }),
+      move_speed: 2,
+      status_effect: 0,
+      status_effect_chance: 100,
+    });
+  }
+  else if (species === "Tyrannosaurus") {
+    move0 = new Move({
+      move_name: "Bite",
+      stats_modifier: new Stats({
+        health: 1,
+        attack: 0.5,
+        defense: 1,
+        speed: 1,
+        agility: 1,
+        rage_points: 0,
+      }),
+      move_speed: 1,
+      status_effect: 0,
+      status_effect_chance: 100,
+    });
+    move1 = new Move({
+      move_name: "Roar",
+      stats_modifier: new Stats({
+        health: 1,
+        attack: 0,
+        defense: 0.5,
+        speed: 1,
+        agility: 1,
+        rage_points: 0,
+      }),
+      move_speed: 2,
+      status_effect: 0,
+      status_effect_chance: 100,
+    });
+  }
+  else if (species === "Velociraptor") {
+    move0 = new Move({
+      move_name: "Bite",
+      stats_modifier: new Stats({
+        health: 1,
+        attack: 0.5,
+        defense: 1,
+        speed: 1,
+        agility: 1,
+        rage_points: 0,
+      }),
+      move_speed: 1,
+      status_effect: 0,
+      status_effect_chance: 100,
+    });
+    move1 = new Move({
+      move_name: "Dodge",
+      stats_modifier: new Stats({
+        health: 1,
+        attack: 0,
+        defense: 1,
+        speed: 1,
+        agility: 2,
+        rage_points: 0,
+      }),
+      move_speed: 1,
+      status_effect: 0,
+      status_effect_chance: 100,
+    });
+  }
+  const move2 = new Move({
+    move_name: "",
+      stats_modifier: new Stats({
+        health: 1,
+        attack: 0,
+        defense: 1,
+        speed: 1,
+        agility: 1,
+        rage_points: 1,
+      }),
+      move_speed: 0,
+      status_effect: 0,
+      status_effect_chance: 100,
+  });
+  const move3 = new Move({
+    move_name: "",
+      stats_modifier: new Stats({
+        health: 1,
+        attack: 0,
+        defense: 1,
+        speed: 1,
+        agility: 1,
+        rage_points: 1,
+      }),
+      move_speed: 0,
+      status_effect: 0,
+      status_effect_chance: 100,
+  });
+
+  const gameMetadataArgs =
+    new CreateGameMetadataArgs({
+      experience: 0,
+      level: 1,
+      baseStats: baseStats,
+      levelStats: levelStats,
+      currStats: currStats,
+      status_effect: 0,
+      moves: [move0, move1, move2, move3],
+    });
+
+  return gameMetadataArgs;
 }

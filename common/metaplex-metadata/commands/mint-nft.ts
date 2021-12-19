@@ -69,7 +69,7 @@ import {
         new Creator({
           address: creator.address,
           share: creator.share,
-          verified: 1,
+          verified: 0,
         }),
     );
   
@@ -214,17 +214,22 @@ import {
     connection: Connection,
     walletKeypair: Keypair,
     metadataLink: string,
+    primSale: boolean,
   ): Promise<PublicKey | void> => {
     // Retrieve metadata
     const data = await createMetadata(metadataLink);
-    if (!data) return;
+    //if (!data) return;
   
     const metadataAccount = await getMetadata(mintKey);
     const signers: anchor.web3.Keypair[] = [];
+    let newUpdateAuthority;
+    if (walletKeypair){
+      newUpdateAuthority = walletKeypair.publicKey.toBase58()
+    }
     const value = new UpdateMetadataArgs({
       data,
-      updateAuthority: walletKeypair.publicKey.toBase58(),
-      primarySaleHappened: null,
+      updateAuthority: newUpdateAuthority,
+      primarySaleHappened: primSale,
     });
     const txnData = Buffer.from(serialize(METADATA_SCHEMA, value));
   

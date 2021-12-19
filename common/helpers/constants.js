@@ -8,4 +8,4 @@ exports.ARWEAVE_PAYMENT_WALLET = new web3_js_1.PublicKey('HvwC9QSAzvGXhhVrgPmauV
 // );
 exports.SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID = new web3_js_1.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
 exports.TOKEN_PROGRAM_ID = new web3_js_1.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
-exports.DEFAULT_TIMEOUT = 15000;
+exports.DEFAULT_TIMEOUT = 30000;

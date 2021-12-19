@@ -72,7 +72,7 @@ export function createGameMetadataInstruction(
     payer: PublicKey,
     updateAuthority: PublicKey,
     txnData: Buffer,
-    game_metadata_program_id,
+    game_metadata_program_id: PublicKey,
 ) {
     const keys = [
         {
@@ -125,7 +125,7 @@ export function updateStatsInstruction(
     payer: PublicKey,
     //updateAuthority: PublicKey,
     txnData: Buffer,
-    game_metadata_program_id,
+    game_metadata_program_id: PublicKey,
 ) {
     const keys = [
         {
@@ -182,7 +182,7 @@ export function enterBattleInstruction(
     metadataAccount: PublicKey,
     payer: PublicKey,
     txnData: Buffer,
-    game_metadata_program_id,
+    game_metadata_program_id: PublicKey,
 ) {
     const keys = [
         {
@@ -215,7 +215,7 @@ export function createBattleInstruction(
     payer: PublicKey,
     updateAuthority: PublicKey,
     txnData: Buffer,
-    battle_program_id,
+    battle_program_id: PublicKey,
 ) {
     const keys = [
         {
@@ -269,7 +269,7 @@ export function joinBattleInstruction(
     teamMember2: PublicKey,
     payer: PublicKey,
     txnData: Buffer,
-    battle_program_id,
+    battle_program_id: PublicKey,
 ) {
     const keys = [
         {
@@ -320,7 +320,7 @@ export function chooseTeamMemberInstruction(
     playerAccount: PublicKey,
     payer: PublicKey,
     txnData: Buffer,
-    battle_program_id,
+    battle_program_id: PublicKey,
 ) {
     const keys = [
         {
@@ -354,7 +354,7 @@ export function submitActionInstruction(
     metadataProgramID: PublicKey,
     payer: PublicKey,
     txnData: Buffer,
-    battle_program_id,
+    battle_program_id: PublicKey,
 ) {
     const keys = [
         {
@@ -375,7 +375,7 @@ export function submitActionInstruction(
         {
             pubkey: opponentTeamMember,
             isSigner: false,
-            isWritable: false,
+            isWritable: true,
         },
         {
             pubkey: metadataProgramID,
@@ -402,7 +402,7 @@ export function updateInstruction(
     //metadataProgramID: PublicKey,
     player: PublicKey,
     txnData: Buffer,
-    battle_program_id,
+    battle_program_id: PublicKey,
 ) {
     const keys = [
         {
