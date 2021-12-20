@@ -3,7 +3,7 @@
     "symbol": "",
     "description": "",
     "seller_fee_basis_points": 100,
-    "image": "https://raw.githubusercontent.com/dinosols/GameContracts/main/tests/data/ai_player1.png",
+    "image": "https://raw.githubusercontent.com/dinosols/GameContracts/main/tests/data/ai_player3.png",
     "attributes": [
         {
             "trait_type": "skin color",
@@ -40,7 +40,7 @@
         "files": [
             {
                 "type": "image/png",
-                "uri": "https://raw.githubusercontent.com/dinosols/GameContracts/main/tests/data/ai_player1.png"
+                "uri": "https://raw.githubusercontent.com/dinosols/GameContracts/main/tests/data/ai_player3.png"
             }
         ],
         "creators": [
