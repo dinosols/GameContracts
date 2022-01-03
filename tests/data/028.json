@@ -1,0 +1,67 @@
+{
+    "name": "Dinosol #028",
+    "symbol": "DINO",
+    "seller_fee_basis_points": 500,
+    "image": "image.png",
+    "attributes": [
+        {
+            "trait_type": "Skin Color",
+            "value": "Red"
+        },
+        {
+            "trait_type": "Eye",
+            "value": "None"
+        },
+        {
+            "trait_type": "Nose",
+            "value": "None"
+        },
+        {
+            "trait_type": "Claw And Horn",
+            "value": "Steel"
+        },
+        {
+            "trait_type": "Mouth",
+            "value": "Dragon Breath"
+        },
+        {
+            "trait_type": "Feature",
+            "value": "None"
+        },
+        {
+            "trait_type": "Necklace",
+            "value": "None"
+        },
+        {
+            "trait_type": "Background",
+            "value": "Blue"
+        },
+        {
+            "trait_type": "Species",
+            "value": "Velociraptor"
+        }
+    ],
+    "collection": {
+        "name": "Dinosols",
+        "family": "Dinos"
+    },
+    "properties": {
+        "files": [
+            {
+                "uri": "image.png",
+                "type": "image/png"
+            }
+        ],
+        "category": "image",
+        "creators": [
+            {
+                "address": "PoWbSu5iThzzuAnPnStwAxk3BSVUUZYzHC4feArhscr",
+                "share": 90
+            },
+            {
+                "address": "9sezidXDRK5XqSftpKWxacqK44ippgkKkSccxCUDVfe6",
+                "share": 10
+            }
+        ]
+    }
+}
